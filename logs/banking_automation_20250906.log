@@ -1,0 +1,30 @@
+2025-09-06 21:07:33,602 - INFO - Banking Automation Tool initialized
+2025-09-06 21:07:33,602 - INFO - Starting Banking Automation Tool
+2025-09-06 22:33:02,872 - INFO - Banking Automation Tool v2.0 initialized
+2025-09-06 22:33:02,878 - INFO - Starting Banking Automation Tool v2.0
+2025-09-06 22:33:03,061 - INFO - Node.js found: v20.11.0
+2025-09-06 22:33:19,038 - INFO - Starting Appium server on port 4723
+2025-09-06 22:33:19,080 - ERROR - Failed to start server: [WinError 2] The system cannot find the file specified
+2025-09-06 22:35:02,682 - INFO - Installing Appium globally...
+2025-09-06 22:35:08,077 - INFO - Node.js found: v20.11.0
+2025-09-06 22:35:36,945 - INFO - Starting Appium server on port 4723
+2025-09-06 22:35:36,981 - ERROR - Failed to start server: [WinError 2] The system cannot find the file specified
+2025-09-06 22:36:03,655 - INFO - Starting Appium server on port 4723
+2025-09-06 22:36:03,688 - ERROR - Failed to start server: [WinError 2] The system cannot find the file specified
+2025-09-06 22:36:32,309 - INFO - Starting Appium server on port 4723
+2025-09-06 22:36:32,339 - ERROR - Failed to start server: [WinError 2] The system cannot find the file specified
+2025-09-06 22:39:12,002 - INFO - Appium server stopped
+2025-09-06 23:22:18,188 - INFO - Banking Automation Tool v2.0 initialized
+2025-09-06 23:22:18,188 - INFO - Starting Banking Automation Tool v2.0
+2025-09-06 23:22:18,301 - INFO - Node.js found: v20.11.0
+2025-09-06 23:27:42,634 - INFO - Appium server stopped
+2025-09-06 23:27:52,937 - INFO - Banking Automation Tool v2.0 initialized
+2025-09-06 23:27:52,937 - INFO - Starting Banking Automation Tool v2.0
+2025-09-06 23:27:53,029 - INFO - Node.js found: v20.11.0
+2025-09-06 23:28:07,208 - INFO - Starting Appium server on port 4723
+2025-09-06 23:28:07,218 - ERROR - Failed to start server: [WinError 2] The system cannot find the file specified
+2025-09-06 23:29:22,433 - INFO - Starting Appium server on port 4723
+2025-09-06 23:29:22,460 - ERROR - Failed to start server: [WinError 2] The system cannot find the file specified
+2025-09-06 23:29:53,207 - INFO - Starting Appium server on port 4723
+2025-09-06 23:29:53,243 - ERROR - Failed to start server: [WinError 2] The system cannot find the file specified
+2025-09-06 23:33:48,217 - INFO - Appium server stopped
