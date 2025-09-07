@@ -44,3 +44,59 @@ WARN Appium   - Driver "uiautomator2" (package `appium-uiautomator2-driver`) may
 2025-09-07 01:40:20,306 - INFO - Driver session closed
 2025-09-07 01:40:21,703 - INFO - Terminated Appium process: 15000
 2025-09-07 01:40:21,704 - INFO - Appium server stopped
+2025-09-07 18:20:27,546 - INFO - Banking Automation Tool v3.0 initialized
+2025-09-07 18:20:27,547 - INFO - Starting Banking Automation Tool v3.0
+2025-09-07 18:20:27,781 - INFO - Node.js found: v20.19.5
+2025-09-07 18:20:37,005 - INFO - Appium found with command 'appium.cmd': 3.0.1
+2025-09-07 18:22:10,904 - INFO - Starting Appium server on port 4723
+2025-09-07 18:22:10,905 - INFO - Trying to start server with command: appium
+2025-09-07 18:22:10,915 - INFO - Trying to start server with command: appium.cmd
+2025-09-07 18:22:12,929 - INFO - Successfully started Appium with command: appium.cmd
+2025-09-07 18:22:20,580 - INFO - Appium server started successfully
+2025-09-07 18:25:08,265 - INFO - Appium server stopped
+2025-09-07 18:25:09,207 - INFO - Terminated Appium process: 12252
+2025-09-07 18:25:09,209 - INFO - Appium server stopped
+2025-09-07 18:25:16,766 - INFO - Banking Automation Tool v3.0 initialized
+2025-09-07 18:25:16,767 - INFO - Starting Banking Automation Tool v3.0
+2025-09-07 18:25:16,980 - INFO - Node.js found: v20.19.5
+2025-09-07 18:25:24,537 - INFO - Appium found with command 'appium.cmd': 3.0.1
+2025-09-07 18:25:33,086 - INFO - Starting Appium server on port 4723
+2025-09-07 18:25:33,087 - INFO - Trying to start server with command: appium
+2025-09-07 18:25:33,096 - INFO - Trying to start server with command: appium.cmd
+2025-09-07 18:25:35,114 - INFO - Successfully started Appium with command: appium.cmd
+2025-09-07 18:25:43,752 - INFO - Appium server started successfully
+2025-09-07 18:30:29,250 - INFO - Appium server stopped
+2025-09-07 18:30:30,243 - INFO - Terminated Appium process: 9388
+2025-09-07 18:30:30,244 - INFO - Appium server stopped
+2025-09-07 18:32:09,124 - INFO - Banking Automation Tool v3.0 initialized
+2025-09-07 18:32:09,124 - INFO - Starting Banking Automation Tool v3.0
+2025-09-07 18:32:09,358 - INFO - Node.js found: v20.19.5
+2025-09-07 18:32:16,701 - INFO - Terminated existing Appium process: 11008
+2025-09-07 18:32:18,711 - INFO - Starting Appium server on port 4723
+2025-09-07 18:32:18,711 - INFO - Trying to start server with command: appium
+2025-09-07 18:32:18,734 - INFO - Trying to start server with command: appium.cmd
+2025-09-07 18:32:20,757 - INFO - Successfully started Appium with command: appium.cmd
+2025-09-07 18:32:28,434 - INFO - Appium server started successfully
+2025-09-07 18:32:35,000 - INFO - Appium server stopped
+2025-09-07 18:32:36,047 - INFO - Terminated Appium process: 2412
+2025-09-07 18:32:42,237 - INFO - Starting Appium server on port 4723
+2025-09-07 18:32:42,237 - INFO - Trying to start server with command: appium
+2025-09-07 18:32:42,249 - INFO - Trying to start server with command: appium.cmd
+2025-09-07 18:32:44,255 - INFO - Successfully started Appium with command: appium.cmd
+2025-09-07 18:32:52,617 - INFO - Appium server started successfully
+2025-09-07 18:34:58,835 - INFO - Appium server stopped
+2025-09-07 18:34:59,840 - INFO - Terminated Appium process: 17812
+2025-09-07 18:34:59,846 - INFO - Terminated Appium process: 22324
+2025-09-07 18:34:59,847 - INFO - Appium server stopped
+2025-09-07 18:36:23,365 - INFO - Banking Automation Tool v3.0 initialized
+2025-09-07 18:36:23,366 - INFO - Starting Banking Automation Tool v3.0
+2025-09-07 18:36:23,641 - INFO - Node.js found: v20.19.5
+2025-09-07 18:36:30,715 - INFO - Appium found with command 'appium.cmd': 3.0.1
+2025-09-07 18:36:40,429 - INFO - Starting Appium server on port 4723
+2025-09-07 18:36:40,429 - INFO - Trying to start server with command: appium
+2025-09-07 18:36:40,445 - INFO - Trying to start server with command: appium.cmd
+2025-09-07 18:36:42,463 - INFO - Successfully started Appium with command: appium.cmd
+2025-09-07 18:36:50,116 - INFO - Appium server started successfully
+2025-09-07 18:45:09,187 - INFO - Appium server stopped
+2025-09-07 18:45:10,192 - INFO - Terminated Appium process: 17012
+2025-09-07 18:45:10,193 - INFO - Appium server stopped

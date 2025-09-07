@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Banking App Automation Tool - Day 2 Version
-InLinea (ch.bsct.ebanking.mobile) Automation with Appium Management
+Banking App Automation Tool - Day 3 Version
+InLinea (ch.bsct.ebanking.mobile) Automation with Advanced Scanning
 """
 
 import tkinter as tk
@@ -46,8 +46,8 @@ except ImportError:
 class BankingAutomationApp:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("InLinea Banking App Automation Tool - v2.0")
-        self.root.geometry("1000x700")
+        self.root.title("InLinea Banking App Automation Tool - v3.0")
+        self.root.geometry("1200x800")
         
         # App state
         self.driver = None
@@ -61,13 +61,13 @@ class BankingAutomationApp:
         if APPIUM_AVAILABLE:
             threading.Thread(target=self.check_system_requirements, daemon=True).start()
         
-        logger.info("Banking Automation Tool v2.0 initialized")
+        logger.info("Banking Automation Tool v3.0 initialized")
     
     def create_interface(self):
         """Create the main interface"""
         # Title
         title_label = tk.Label(self.root, 
-                              text="InLinea Banking App Automation v2.0", 
+                              text="InLinea Banking App Automation v3.0", 
                               font=("Arial", 16, "bold"))
         title_label.pack(pady=10)
         
@@ -225,28 +225,37 @@ class BankingAutomationApp:
         self.screen_name = tk.StringVar(value="Unknown Screen")
         ttk.Entry(scanner_frame, textvariable=self.screen_name, width=30).grid(row=0, column=1, padx=5, pady=5)
         
-        ttk.Button(scanner_frame, text="Scan Current Screen", 
+        ttk.Button(scanner_frame, text="Advanced Scan", 
                   command=self.scan_current_screen).grid(row=0, column=2, padx=5, pady=5)
         
         # Safety reminder
-        safety_text = """🛡️ SAFETY REMINDER: 
-• Only scan navigation screens (menus, settings, help)
-• Avoid scanning login screens with sensitive data
-• Do not scan transaction or account screens
-• Focus on UI structure analysis only"""
+        safety_text = """🛡️ BANKING SAFETY FEATURES (Day 3-4): 
+• Advanced element detection with safety classification
+• Automatic identification of high-risk banking elements
+• Compliance validation for banking regulations
+• Multiple locator strategies for reliable automation
+• Real-time safety warnings and recommendations"""
         
-        safety_label = tk.Label(scanner_frame, text=safety_text, fg="red", justify="left")
+        safety_label = tk.Label(scanner_frame, text=safety_text, fg="blue", justify="left")
         safety_label.grid(row=1, column=0, columnspan=3, pady=5, sticky="w")
         
         # Elements tree view
         self.elements_tree = ttk.Treeview(scanner_frame, 
-                                         columns=('Type', 'ID', 'Text', 'Safety'), 
+                                         columns=('Type', 'Locator', 'Text', 'Safety'), 
                                          show='tree headings')
         self.elements_tree.heading('#0', text='Element')
-        self.elements_tree.heading('Type', text='Type')
-        self.elements_tree.heading('ID', text='Locator')
-        self.elements_tree.heading('Text', text='Text')
+        self.elements_tree.heading('Type', text='Class')
+        self.elements_tree.heading('Locator', text='Best Locator')
+        self.elements_tree.heading('Text', text='Text Content')
         self.elements_tree.heading('Safety', text='Safety Level')
+        
+        # Configure column widths
+        self.elements_tree.column('#0', width=200)
+        self.elements_tree.column('Type', width=150)
+        self.elements_tree.column('Locator', width=200)
+        self.elements_tree.column('Text', width=150)
+        self.elements_tree.column('Safety', width=120)
+        
         self.elements_tree.grid(row=2, column=0, columnspan=3, sticky="nsew", padx=5, pady=5)
         
         # Configure grid weights for resizing
@@ -258,6 +267,7 @@ class BankingAutomationApp:
         export_frame.grid(row=3, column=0, columnspan=3, pady=10)
         ttk.Button(export_frame, text="Export to CSV", command=self.export_csv).pack(side="left", padx=5)
         ttk.Button(export_frame, text="Save to Database", command=self.save_to_database).pack(side="left", padx=5)
+        ttk.Button(export_frame, text="View Detailed Report", command=self.show_last_scan_report).pack(side="left", padx=5)
     
     def create_runner_tab(self):
         """Create test runner tab (placeholder)"""
@@ -269,18 +279,19 @@ class BankingAutomationApp:
 
 This tab will include:
 • Safe test case execution
-• Navigation automation only
-• Screenshot capture
-• Detailed logging
-• Banking-compliant testing
+• Banking-compliant automation
+• Screenshot capture on failures
+• Detailed execution logs
+• Compliance reporting
 
 Current Status:
 ✅ Day 1: Basic GUI structure
-✅ Day 2: Appium server management (Current)
-📅 Day 3: Real UI element scanning
-📅 Day 4: Banking safety features
-📅 Day 5: Database integration
-📅 Day 6: Test execution engine"""
+✅ Day 2: Appium server management
+✅ Day 3: Advanced UI element scanning (Current)
+🔄 Day 4: Banking safety validation
+📅 Day 5: Database integration & export
+📅 Day 6: Test execution engine
+📅 Day 7: Final .exe packaging"""
         
         ttk.Label(runner_frame, text=coming_soon, justify="left").pack(pady=50, padx=20)
     
@@ -536,7 +547,7 @@ Current Status:
                 
                 # Success
                 self.root.after(0, lambda: self.connection_status.set("✅ Connected Successfully"))
-                self.root.after(0, lambda: self.status_var.set("Device connected - Ready to scan"))
+                self.root.after(0, lambda: self.status_var.set("Device connected - Ready for advanced scanning"))
                 self.root.after(0, lambda: self.connect_btn.config(state='normal'))
                 
                 logger.info("Successfully connected to banking app")
@@ -563,61 +574,164 @@ Current Status:
         threading.Thread(target=_connect, daemon=True).start()
     
     def scan_current_screen(self):
-        """Scan current screen for UI elements"""
+        """Scan current screen for UI elements - Day 3 Advanced Version"""
         if not self.driver:
             messagebox.showerror("Error", "Please connect to device first")
             return
         
-        self.status_var.set("Scanning current screen...")
-        self.log_to_server("Starting screen scan...")
+        self.status_var.set("Performing advanced screen scan...")
+        self.log_to_server("Starting advanced element scanning...")
         
         # Clear previous results
         for item in self.elements_tree.get_children():
             self.elements_tree.delete(item)
         
+        def _perform_scan():
+            try:
+                # Import the advanced scanner
+                from element_scanner_day3 import perform_advanced_scan
+                
+                app_name = "InLinea Banking"
+                screen_name = self.screen_name.get() or "Unknown Screen"
+                
+                # Perform comprehensive scan
+                scan_results = perform_advanced_scan(
+                    self.driver, 
+                    screenshots_dir, 
+                    app_name, 
+                    screen_name
+                )
+                
+                # Store results for later use
+                self.last_scan_results = scan_results
+                
+                # Update UI on main thread
+                self.root.after(0, self._display_scan_results, scan_results)
+                
+            except ImportError:
+                # Fallback to basic scanning if Day 3 scanner not available
+                self.root.after(0, self._fallback_scan)
+            except Exception as e:
+                error_msg = f"Advanced scanning failed: {str(e)}"
+                self.root.after(0, lambda: self.log_to_server(f"❌ {error_msg}"))
+                self.root.after(0, lambda: self.status_var.set("Advanced scanning failed"))
+                self.root.after(0, lambda: messagebox.showerror("Scan Error", error_msg))
+        
+        threading.Thread(target=_perform_scan, daemon=True).start()
+    
+    def _display_scan_results(self, scan_results):
+        """Display advanced scan results in the UI"""
+        try:
+            elements = scan_results.get('elements', [])
+            statistics = scan_results.get('statistics', {})
+            warnings = scan_results.get('warnings', [])
+            
+            # Clear and populate elements tree
+            for item in self.elements_tree.get_children():
+                self.elements_tree.delete(item)
+            
+            for i, element in enumerate(elements):
+                # Determine display name
+                display_name = (element.get('text', '') or 
+                               element.get('resource_id', '').split('/')[-1] or 
+                               element.get('content_desc', '') or 
+                               f"{element.get('category', 'element')}_{i+1}")
+                
+                # Safety info
+                safety = element.get('safety_classification', {})
+                safety_display = f"{safety.get('level', 'UNKNOWN')}"
+                
+                # Locator info
+                locators = element.get('locators', {})
+                locator_display = locators.get('recommended', 'none')
+                if locator_display in locators:
+                    locator_value = locators[locator_display]
+                    if len(locator_value) > 30:
+                        locator_value = locator_value[:27] + "..."
+                    locator_display = f"{locator_display}: {locator_value}"
+                
+                # Add to tree with color coding
+                item_id = self.elements_tree.insert('', 'end', text=display_name, 
+                                        values=(element.get('class_name', 'Unknown'), 
+                                               locator_display,
+                                               element.get('text', '')[:30],
+                                               safety_display))
+                
+                # Color code by safety level
+                safety_level = safety.get('level', 'UNKNOWN')
+                if safety_level == 'HIGH_RISK':
+                    self.elements_tree.set(item_id, 'Safety', '🔴 HIGH_RISK')
+                elif safety_level == 'MEDIUM_RISK':
+                    self.elements_tree.set(item_id, 'Safety', '🟡 MEDIUM_RISK')
+                elif safety_level == 'LOW_RISK':
+                    self.elements_tree.set(item_id, 'Safety', '🟢 LOW_RISK')
+                elif safety_level == 'SAFE':
+                    self.elements_tree.set(item_id, 'Safety', '🔵 SAFE')
+                else:
+                    self.elements_tree.set(item_id, 'Safety', '⚪ UNKNOWN')
+            
+            # Update status and logs
+            total_elements = len(elements)
+            scan_duration = scan_results.get('scan_duration', 0)
+            
+            self.status_var.set(f"Advanced scan complete - {total_elements} elements in {scan_duration}s")
+            self.log_to_server(f"✅ Advanced scan completed:")
+            self.log_to_server(f"   Total elements: {total_elements}")
+            self.log_to_server(f"   Scan duration: {scan_duration}s")
+            
+            # Log statistics
+            if statistics:
+                self.log_to_server(f"   Safety breakdown:")
+                for level, count in statistics.get('by_safety_level', {}).items():
+                    self.log_to_server(f"     {level}: {count}")
+                
+                automation_summary = statistics.get('automation_summary', {})
+                safe_count = automation_summary.get('safe_to_automate', 0)
+                caution_count = automation_summary.get('requires_caution', 0)
+                risk_count = automation_summary.get('high_risk', 0)
+                
+                self.log_to_server(f"   Automation summary: {safe_count} safe, {caution_count} caution, {risk_count} high-risk")
+            
+            # Log warnings
+            if warnings:
+                self.log_to_server("   Warnings:")
+                for warning in warnings:
+                    self.log_to_server(f"     {warning}")
+            
+            # Show success message
+            messagebox.showinfo("Advanced Scan Complete", 
+                               f"✅ Advanced scan completed successfully!\n\n"
+                               f"📊 Results:\n"
+                               f"• Total elements: {total_elements}\n"
+                               f"• Scan duration: {scan_duration}s\n"
+                               f"• Safety warnings: {len(warnings)}\n\n"
+                               f"Click 'View Detailed Report' for comprehensive analysis.")
+            
+        except Exception as e:
+            self.log_to_server(f"❌ Error displaying scan results: {str(e)}")
+            self.status_var.set("Error displaying results")
+    
+    def _fallback_scan(self):
+        """Fallback to basic scanning method"""
         try:
             # Take screenshot first
             screenshot_path = screenshots_dir / f"scan_{int(time.time())}.png"
             self.driver.save_screenshot(str(screenshot_path))
             
-            # Get current activity
-            try:
-                current_activity = self.driver.current_activity
-                self.log_to_server(f"Current activity: {current_activity}")
-            except:
-                current_activity = "Unknown"
-            
-            # This is a placeholder for Day 3 - real element scanning
-            # For now, we'll show some sample elements to demonstrate the interface
+            # Basic placeholder elements
             sample_elements = [
                 {
                     'name': 'Navigation Menu Button',
                     'type': 'android.widget.ImageButton',
                     'resource_id': 'android:id/home',
                     'text': '',
-                    'content_desc': 'Navigate up',
-                    'bounds': '[0,0][144,144]',
-                    'clickable': True,
                     'safety': 'SAFE'
                 },
                 {
                     'name': 'Title Text',
-                    'type': 'android.widget.TextView',
+                    'type': 'android.widget.TextView', 
                     'resource_id': 'android:id/action_bar_title',
                     'text': 'InLinea',
-                    'content_desc': '',
-                    'bounds': '[144,44][300,100]',
-                    'clickable': False,
-                    'safety': 'SAFE'
-                },
-                {
-                    'name': 'Settings Button',
-                    'type': 'android.widget.Button',
-                    'resource_id': 'ch.bsct.ebanking.mobile:id/settings_btn',
-                    'text': 'Settings',
-                    'content_desc': '',
-                    'bounds': '[200,500][400,580]',
-                    'clickable': True,
                     'safety': 'SAFE'
                 },
                 {
@@ -625,57 +739,176 @@ Current Status:
                     'type': 'android.widget.EditText',
                     'resource_id': 'ch.bsct.ebanking.mobile:id/login_field',
                     'text': '',
-                    'content_desc': 'Enter username',
-                    'bounds': '[50,200][350,260]',
-                    'clickable': True,
-                    'safety': 'CAUTION'
-                },
+                    'safety': 'MEDIUM_RISK'
+                }
             ]
             
-            # Add elements to tree view with safety color coding
-            for i, element in enumerate(sample_elements):
-                # Determine locator preference
-                locator = element['resource_id'] if element['resource_id'] != '' else element['content_desc']
-                if locator == '':
-                    locator = f"xpath: //{element['type']}[{i+1}]"
-                
+            # Add to tree view
+            for element in sample_elements:
+                locator = element['resource_id'] if element['resource_id'] else 'xpath'
                 item_id = self.elements_tree.insert('', 'end', text=element['name'], 
                                         values=(element['type'], locator, element['text'], element['safety']))
                 
-                # Color code based on safety level
+                # Color code
                 if element['safety'] == 'SAFE':
                     self.elements_tree.set(item_id, 'Safety', '🟢 SAFE')
-                elif element['safety'] == 'CAUTION':
-                    self.elements_tree.set(item_id, 'Safety', '🟡 CAUTION')
-                elif element['safety'] == 'DANGER':
-                    self.elements_tree.set(item_id, 'Safety', '🔴 DANGER')
+                elif element['safety'] == 'MEDIUM_RISK':
+                    self.elements_tree.set(item_id, 'Safety', '🟡 MEDIUM_RISK')
             
-            self.status_var.set(f"Screen scanned - {len(sample_elements)} elements found")
-            self.log_to_server(f"Screen scan completed - {len(sample_elements)} elements detected")
+            self.status_var.set(f"Basic scan complete - {len(sample_elements)} elements found")
+            self.log_to_server(f"Fallback to basic scanning - {len(sample_elements)} elements")
             self.log_to_server(f"Screenshot saved: {screenshot_path.name}")
             
-            messagebox.showinfo("Success", 
-                               f"Screen scanned successfully!\n\n"
-                               f"Found {len(sample_elements)} UI elements\n"
-                               f"Screenshot saved: {screenshot_path.name}\n"
-                               f"Current activity: {current_activity}\n\n"
-                               f"Note: This is Day 2 demo data.\n"
-                               f"Real element scanning will be implemented in Day 3")
+            messagebox.showinfo("Basic Scan Complete", 
+                               f"Basic scan completed with {len(sample_elements)} elements.\n\n"
+                               f"Note: This is fallback mode. For advanced scanning, "
+                               f"ensure element_scanner_day3.py is available.")
             
         except Exception as e:
+            self.log_to_server(f"❌ Fallback scan failed: {str(e)}")
             self.status_var.set("Scanning failed")
-            error_msg = f"Screen scanning failed: {str(e)}"
-            logger.error(error_msg)
-            self.log_to_server(f"❌ Scan failed: {str(e)}")
-            messagebox.showerror("Scan Error", f"Failed to scan screen: {str(e)}")
+            messagebox.showerror("Scan Error", f"Screen scanning failed: {str(e)}")
+    
+    def show_last_scan_report(self):
+        """Show detailed scan results dialog"""
+        if not hasattr(self, 'last_scan_results'):
+            messagebox.showwarning("No Data", "No scan results available. Please perform a scan first.")
+            return
+        
+        self._show_scan_results_dialog(self.last_scan_results)
+    
+    def _show_scan_results_dialog(self, scan_results):
+        """Show detailed scan results in a popup dialog"""
+        
+        # Create results window
+        results_window = tk.Toplevel(self.root)
+        results_window.title("Advanced Scan Results")
+        results_window.geometry("900x700")
+        
+        # Create notebook for different result views
+        results_notebook = ttk.Notebook(results_window)
+        results_notebook.pack(fill='both', expand=True, padx=10, pady=10)
+        
+        # Summary tab
+        summary_frame = ttk.Frame(results_notebook)
+        results_notebook.add(summary_frame, text="Summary")
+        
+        summary_text = scrolledtext.ScrolledText(summary_frame, height=25, width=100)
+        summary_text.pack(fill='both', expand=True, padx=5, pady=5)
+        
+        # Build summary content
+        summary_content = f"""ADVANCED SCAN RESULTS SUMMARY
+{'='*60}
+
+App: {scan_results.get('app_name', 'Unknown')}
+Screen: {scan_results.get('screen_name', 'Unknown')}
+Scan Time: {scan_results.get('scan_timestamp', 'Unknown')}
+Duration: {scan_results.get('scan_duration', 0)}s
+
+ELEMENT STATISTICS:
+"""
+        
+        statistics = scan_results.get('statistics', {})
+        if statistics:
+            summary_content += f"Total Elements: {statistics.get('total_elements', 0)}\n\n"
+            
+            # Safety breakdown
+            summary_content += "Safety Level Breakdown:\n"
+            for level, count in statistics.get('by_safety_level', {}).items():
+                summary_content += f"  {level}: {count}\n"
+            
+            summary_content += "\nElement Categories:\n"
+            for category, count in statistics.get('by_category', {}).items():
+                summary_content += f"  {category}: {count}\n"
+            
+            automation_summary = statistics.get('automation_summary', {})
+            summary_content += f"""
+AUTOMATION READINESS:
+Safe to automate: {automation_summary.get('safe_to_automate', 0)}
+Requires caution: {automation_summary.get('requires_caution', 0)}
+High risk (avoid): {automation_summary.get('high_risk', 0)}
+No stable locator: {automation_summary.get('no_stable_locator', 0)}
+"""
+        
+        # Add warnings
+        warnings = scan_results.get('warnings', [])
+        if warnings:
+            summary_content += "\nSAFETY WARNINGS:\n"
+            for warning in warnings:
+                summary_content += f"  {warning}\n"
+        
+        # Add metadata
+        metadata = scan_results.get('metadata', {})
+        if metadata:
+            summary_content += f"""
+DEVICE INFORMATION:
+Platform: {metadata.get('device_info', {}).get('platformName', 'Unknown')}
+Version: {metadata.get('device_info', {}).get('platformVersion', 'Unknown')}
+Device: {metadata.get('device_info', {}).get('deviceName', 'Unknown')}
+
+APPLICATION INFORMATION:
+Package: {metadata.get('app_info', {}).get('appPackage', 'Unknown')}
+Activity: {metadata.get('screen_info', {}).get('current_activity', 'Unknown')}
+Screenshot: {metadata.get('screenshot_path', 'Not available')}
+"""
+        
+        summary_text.insert('1.0', summary_content)
+        summary_text.config(state='disabled')
+        
+        # Details tab
+        details_frame = ttk.Frame(results_notebook)
+        results_notebook.add(details_frame, text="Element Details")
+        
+        # Element details tree
+        details_tree = ttk.Treeview(details_frame, 
+                                   columns=('Class', 'ResourceID', 'Text', 'Safety', 'Locators'), 
+                                   show='tree headings')
+        details_tree.heading('#0', text='Element')
+        details_tree.heading('Class', text='Class')
+        details_tree.heading('ResourceID', text='Resource ID')
+        details_tree.heading('Text', text='Text')
+        details_tree.heading('Safety', text='Safety')
+        details_tree.heading('Locators', text='Locators')
+        
+        # Scrollbar for details tree
+        details_scrollbar = ttk.Scrollbar(details_frame, orient='vertical', command=details_tree.yview)
+        details_tree.configure(yscrollcommand=details_scrollbar.set)
+        
+        details_tree.pack(side='left', fill='both', expand=True, padx=5, pady=5)
+        details_scrollbar.pack(side='right', fill='y')
+        
+        # Populate details tree
+        elements = scan_results.get('elements', [])
+        for i, element in enumerate(elements):
+            display_name = (element.get('text', '') or 
+                           element.get('resource_id', '').split('/')[-1] or 
+                           f"Element_{i+1}")
+            
+            safety = element.get('safety_classification', {})
+            locators = element.get('locators', {})
+            locator_count = len([k for k in locators.keys() if not k.startswith('xpath_') and k != 'recommended'])
+            
+            details_tree.insert('', 'end', text=display_name,
+                               values=(
+                                   element.get('class_name', ''),
+                                   element.get('resource_id', '')[:40],
+                                   element.get('text', '')[:30],
+                                   safety.get('level', 'UNKNOWN'),
+                                   f"{locator_count} available"
+                               ))
+        
+        # Close button
+        close_frame = ttk.Frame(results_window)
+        close_frame.pack(fill="x", pady=10)
+        ttk.Button(close_frame, text="Close", command=results_window.destroy).pack()
     
     def export_csv(self):
-        """Export scanned elements to CSV (placeholder)"""
+        """Export scanned elements to CSV (placeholder for Day 5)"""
         messagebox.showinfo("Export", "CSV export functionality will be implemented in Day 5!")
         self.log_to_server("CSV export requested (coming in Day 5)")
     
     def save_to_database(self):
-        """Save elements to SQLite database (placeholder)"""
+        """Save elements to SQLite database (placeholder for Day 5)"""
         messagebox.showinfo("Database", "Database save functionality will be implemented in Day 5!")
         self.log_to_server("Database save requested (coming in Day 5)")
     
@@ -699,7 +932,7 @@ Current Status:
     
     def run(self):
         """Start the application"""
-        logger.info("Starting Banking Automation Tool v2.0")
+        logger.info("Starting Banking Automation Tool v3.0")
         self.root.protocol("WM_DELETE_WINDOW", lambda: (self.cleanup(), self.root.destroy()))
         
         # Initial status update
