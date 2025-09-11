@@ -527,3 +527,52 @@ NoSuchDriverError: A session is either terminated or not started
 2025-09-07 21:03:54,956 - INFO - Starting Banking Automation Tool v5.0
 2025-09-07 21:03:55,722 - INFO - Node.js found: v20.19.5
 2025-09-07 21:04:19,303 - INFO - Appium server is running, assuming Appium is installed
+2025-09-07 21:15:24,314 - INFO - Appium server already running
+2025-09-07 21:15:49,913 - ERROR - Device connection failed: Message: Cannot start the 'ch.bsct.ebanking.mobile' application. Consider checking the driver's troubleshooting documentation. Original error: Error executing adbExec. Original error: 'Command 'C:\\Users\\chand\\AppData\\Local\\Android\\Sdk\\platform-tools\\adb.exe -P 5037 -s ZA222TQTZT shell am start -W -S -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -f 0x10200000' exited with code 1'; Command output: Error: Intent matches multiple activities; can't stop: Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10200000 }
+
+Stacktrace:
+UnknownError: Cannot start the 'ch.bsct.ebanking.mobile' application. Consider checking the driver's troubleshooting documentation. Original error: Error executing adbExec. Original error: 'Command 'C:\\Users\\chand\\AppData\\Local\\Android\\Sdk\\platform-tools\\adb.exe -P 5037 -s ZA222TQTZT shell am start -W -S -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -f 0x10200000' exited with code 1'; Command output: Error: Intent matches multiple activities; can't stop: Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10200000 }
+
+    at getResponseForW3CError (C:\Users\chand\AppData\Roaming\npm\node_modules\appium\node_modules\@appium\base-driver\lib\protocol\errors.ts:1103:34)
+    at asyncHandler (C:\Users\chand\AppData\Roaming\npm\node_modules\appium\node_modules\@appium\base-driver\lib\protocol\protocol.ts:507:57)
+The above error is caused by
+Error: Cannot start the 'ch.bsct.ebanking.mobile' application. Consider checking the driver's troubleshooting documentation. Original error: Error executing adbExec. Original error: 'Command 'C:\\Users\\chand\\AppData\\Local\\Android\\Sdk\\platform-tools\\adb.exe -P 5037 -s ZA222TQTZT shell am start -W -S -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -f 0x10200000' exited with code 1'; Command output: Error: Intent matches multiple activities; can't stop: Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10200000 }
+
+    at ADB.startApp (C:\Users\chand\.appium\node_modules\appium-uiautomator2-driver\node_modules\appium-adb\lib\tools\apk-utils.js:189:11)
+    at AndroidUiautomator2Driver.ensureAppStarts (C:\Users\chand\.appium\node_modules\appium-uiautomator2-driver\lib\driver.ts:826:5)
+    at AndroidUiautomator2Driver.performSessionPostExecSetup (C:\Users\chand\.appium\node_modules\appium-uiautomator2-driver\lib\driver.ts:649:7)
+    at AndroidUiautomator2Driver.startUiAutomator2Session (C:\Users\chand\.appium\node_modules\appium-uiautomator2-driver\lib\driver.ts:697:5)
+    at AndroidUiautomator2Driver.createSession (C:\Users\chand\.appium\node_modules\appium-uiautomator2-driver\lib\driver.ts:419:22)
+    at AppiumDriver.createSession (C:\Users\chand\AppData\Roaming\npm\node_modules\appium\lib\appium.js:360:35)
+2025-09-07 21:16:14,430 - ERROR - Device connection failed: Message: Cannot start the 'ch.bsct.ebanking.mobile' application. Consider checking the driver's troubleshooting documentation. Original error: Error executing adbExec. Original error: 'Command 'C:\\Users\\chand\\AppData\\Local\\Android\\Sdk\\platform-tools\\adb.exe -P 5037 -s ZA222TQTZT shell am start -W -S -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -f 0x10200000' exited with code 1'; Command output: Error: Intent matches multiple activities; can't stop: Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10200000 }
+
+Stacktrace:
+UnknownError: Cannot start the 'ch.bsct.ebanking.mobile' application. Consider checking the driver's troubleshooting documentation. Original error: Error executing adbExec. Original error: 'Command 'C:\\Users\\chand\\AppData\\Local\\Android\\Sdk\\platform-tools\\adb.exe -P 5037 -s ZA222TQTZT shell am start -W -S -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -f 0x10200000' exited with code 1'; Command output: Error: Intent matches multiple activities; can't stop: Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10200000 }
+
+    at getResponseForW3CError (C:\Users\chand\AppData\Roaming\npm\node_modules\appium\node_modules\@appium\base-driver\lib\protocol\errors.ts:1103:34)
+    at asyncHandler (C:\Users\chand\AppData\Roaming\npm\node_modules\appium\node_modules\@appium\base-driver\lib\protocol\protocol.ts:507:57)
+The above error is caused by
+Error: Cannot start the 'ch.bsct.ebanking.mobile' application. Consider checking the driver's troubleshooting documentation. Original error: Error executing adbExec. Original error: 'Command 'C:\\Users\\chand\\AppData\\Local\\Android\\Sdk\\platform-tools\\adb.exe -P 5037 -s ZA222TQTZT shell am start -W -S -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -f 0x10200000' exited with code 1'; Command output: Error: Intent matches multiple activities; can't stop: Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10200000 }
+
+    at ADB.startApp (C:\Users\chand\.appium\node_modules\appium-uiautomator2-driver\node_modules\appium-adb\lib\tools\apk-utils.js:189:11)
+    at AndroidUiautomator2Driver.ensureAppStarts (C:\Users\chand\.appium\node_modules\appium-uiautomator2-driver\lib\driver.ts:826:5)
+    at AndroidUiautomator2Driver.performSessionPostExecSetup (C:\Users\chand\.appium\node_modules\appium-uiautomator2-driver\lib\driver.ts:649:7)
+    at AndroidUiautomator2Driver.startUiAutomator2Session (C:\Users\chand\.appium\node_modules\appium-uiautomator2-driver\lib\driver.ts:697:5)
+    at AndroidUiautomator2Driver.createSession (C:\Users\chand\.appium\node_modules\appium-uiautomator2-driver\lib\driver.ts:419:22)
+    at AppiumDriver.createSession (C:\Users\chand\AppData\Roaming\npm\node_modules\appium\lib\appium.js:360:35)
+2025-09-07 21:21:05,147 - ERROR - Device connection failed: Message: Cannot start the 'ch.bsct.ebanking.mobile' application. Consider checking the driver's troubleshooting documentation. Original error: Error executing adbExec. Original error: 'Command 'C:\\Users\\chand\\AppData\\Local\\Android\\Sdk\\platform-tools\\adb.exe -P 5037 -s ZA222TQTZT shell am start -W -S -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -f 0x10200000' exited with code 1'; Command output: Error: Intent matches multiple activities; can't stop: Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10200000 }
+
+Stacktrace:
+UnknownError: Cannot start the 'ch.bsct.ebanking.mobile' application. Consider checking the driver's troubleshooting documentation. Original error: Error executing adbExec. Original error: 'Command 'C:\\Users\\chand\\AppData\\Local\\Android\\Sdk\\platform-tools\\adb.exe -P 5037 -s ZA222TQTZT shell am start -W -S -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -f 0x10200000' exited with code 1'; Command output: Error: Intent matches multiple activities; can't stop: Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10200000 }
+
+    at getResponseForW3CError (C:\Users\chand\AppData\Roaming\npm\node_modules\appium\node_modules\@appium\base-driver\lib\protocol\errors.ts:1103:34)
+    at asyncHandler (C:\Users\chand\AppData\Roaming\npm\node_modules\appium\node_modules\@appium\base-driver\lib\protocol\protocol.ts:507:57)
+The above error is caused by
+Error: Cannot start the 'ch.bsct.ebanking.mobile' application. Consider checking the driver's troubleshooting documentation. Original error: Error executing adbExec. Original error: 'Command 'C:\\Users\\chand\\AppData\\Local\\Android\\Sdk\\platform-tools\\adb.exe -P 5037 -s ZA222TQTZT shell am start -W -S -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -f 0x10200000' exited with code 1'; Command output: Error: Intent matches multiple activities; can't stop: Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10200000 }
+
+    at ADB.startApp (C:\Users\chand\.appium\node_modules\appium-uiautomator2-driver\node_modules\appium-adb\lib\tools\apk-utils.js:189:11)
+    at AndroidUiautomator2Driver.ensureAppStarts (C:\Users\chand\.appium\node_modules\appium-uiautomator2-driver\lib\driver.ts:826:5)
+    at AndroidUiautomator2Driver.performSessionPostExecSetup (C:\Users\chand\.appium\node_modules\appium-uiautomator2-driver\lib\driver.ts:649:7)
+    at AndroidUiautomator2Driver.startUiAutomator2Session (C:\Users\chand\.appium\node_modules\appium-uiautomator2-driver\lib\driver.ts:697:5)
+    at AndroidUiautomator2Driver.createSession (C:\Users\chand\.appium\node_modules\appium-uiautomator2-driver\lib\driver.ts:419:22)
+    at AppiumDriver.createSession (C:\Users\chand\AppData\Roaming\npm\node_modules\appium\lib\appium.js:360:35)

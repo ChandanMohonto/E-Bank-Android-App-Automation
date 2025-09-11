@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Banking App Automation Tool - Day 5 Complete Version
-InLinea (ch.bsct.ebanking.mobile) Automation with Database Integration
+Banking App Automation Tool - Day 6 Complete Version
+InLinea (ch.bsct.ebanking.mobile) Automation with Test Runner
 """
 
 import tkinter as tk
@@ -48,7 +48,7 @@ except ImportError:
 class BankingAutomationApp:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("InLinea Banking App Automation Tool - v5.0")
+        self.root.title("InLinea Banking App Automation Tool - v6.0")
         self.root.geometry("1200x800")
         
         # App state
@@ -64,13 +64,13 @@ class BankingAutomationApp:
         if APPIUM_AVAILABLE:
             threading.Thread(target=self.check_system_requirements, daemon=True).start()
         
-        logger.info("Banking Automation Tool v5.0 initialized")
+        logger.info("Banking Automation Tool v6.0 initialized with Test Runner")
     
     def create_interface(self):
         """Create the main interface"""
         # Title
         title_label = tk.Label(self.root, 
-                              text="InLinea Banking App Automation v5.0", 
+                              text="InLinea Banking App Automation v6.0", 
                               font=("Arial", 16, "bold"))
         title_label.pack(pady=10)
         
@@ -79,10 +79,10 @@ class BankingAutomationApp:
         warning_frame.pack(fill="x", padx=10, pady=5)
         
         warning_text = """WARNING: Banking App Automation
-• Use only on test accounts, never production
-• Comply with all banking regulations
-• Tool is for UI analysis and navigation only
-• No actual banking transactions will be automated"""
+- Use only on test accounts, never production
+- Comply with all banking regulations
+- Tool is for UI analysis and navigation only
+- No actual banking transactions will be automated"""
         
         warning_label = tk.Label(warning_frame, text=warning_text, 
                                 bg="yellow", justify="left", font=("Arial", 9))
@@ -100,7 +100,7 @@ class BankingAutomationApp:
         self.create_runner_tab()
         
         # Status bar
-        self.status_var = tk.StringVar(value="Ready - Banking Automation Tool v5.0")
+        self.status_var = tk.StringVar(value="Ready - Banking Automation Tool v6.0")
         status_bar = tk.Label(self.root, textvariable=self.status_var, 
                              relief="sunken", anchor="w")
         status_bar.pack(side="bottom", fill="x")
@@ -233,12 +233,12 @@ class BankingAutomationApp:
                   command=self.scan_current_screen).grid(row=0, column=2, padx=5, pady=5)
         
         # Safety reminder
-        safety_text = """BANKING SAFETY FEATURES (Days 3-5): 
-• Advanced element detection with safety classification
-• Automatic identification of high-risk banking elements
-• Database storage for all scan results
-• Export capabilities (CSV, Excel) with filtering
-• Compliance validation for banking regulations"""
+        safety_text = """BANKING SAFETY FEATURES: 
+- Advanced element detection with safety classification
+- Automatic identification of high-risk banking elements
+- Database storage for all scan results
+- Export capabilities (CSV, Excel) with filtering
+- Compliance validation for banking regulations"""
         
         safety_label = tk.Label(scanner_frame, text=safety_text, fg="blue", justify="left")
         safety_label.grid(row=1, column=0, columnspan=3, pady=5, sticky="w")
@@ -275,7 +275,7 @@ class BankingAutomationApp:
         ttk.Button(export_frame, text="View Detailed Report", command=self.show_last_scan_report).pack(side="left", padx=5)
     
     def create_database_tab(self):
-        """Create database management tab - Day 5"""
+        """Create database management tab"""
         db_frame = ttk.Frame(self.notebook)
         self.notebook.add(db_frame, text="Database & Export")
         
@@ -336,30 +336,196 @@ class BankingAutomationApp:
         ttk.Button(history_frame, text="Refresh History", command=self.refresh_export_history).pack(pady=5)
     
     def create_runner_tab(self):
-        """Create test runner tab"""
+        """Create test runner tab with assertion capabilities"""
         runner_frame = ttk.Frame(self.notebook)
         self.notebook.add(runner_frame, text="Test Runner")
         
-        # Coming soon message
-        coming_soon = """Test Runner - Coming in Day 6
-
-This tab will include:
-• Safe test case execution
-• Banking-compliant automation
-• Screenshot capture on failures
-• Detailed execution logs
-• Compliance reporting
-
-Current Status:
-✓ Day 1: Basic GUI structure
-✓ Day 2: Appium server management
-✓ Day 3: Advanced UI element scanning
-✓ Day 4: Banking safety validation
-✓ Day 5: Database integration & export (Current)
-→ Day 6: Test execution engine
-→ Day 7: Final .exe packaging"""
+        # Test configuration section
+        config_frame = ttk.LabelFrame(runner_frame, text="Test Configuration", padding=10)
+        config_frame.pack(fill="x", padx=10, pady=10)
         
-        ttk.Label(runner_frame, text=coming_soon, justify="left").pack(pady=50, padx=20)
+        # Username and Password inputs
+        ttk.Label(config_frame, text="Test Username:").grid(row=0, column=0, sticky="w", padx=5, pady=5)
+        self.test_username = tk.StringVar(value="testuser")
+        ttk.Entry(config_frame, textvariable=self.test_username, width=30).grid(row=0, column=1, padx=5, pady=5)
+        
+        ttk.Label(config_frame, text="Test Password:").grid(row=1, column=0, sticky="w", padx=5, pady=5)
+        self.test_password = tk.StringVar(value="testpass")
+        ttk.Entry(config_frame, textvariable=self.test_password, show="*", width=30).grid(row=1, column=1, padx=5, pady=5)
+        
+        # Test execution buttons
+        button_frame = ttk.Frame(config_frame)
+        button_frame.grid(row=2, column=0, columnspan=2, pady=10)
+        
+        ttk.Button(button_frame, text="Run Login Test", 
+                  command=self.run_login_test).pack(side="left", padx=5)
+        ttk.Button(button_frame, text="Test OK Button Click", 
+                  command=self.test_ok_button).pack(side="left", padx=5)
+        ttk.Button(button_frame, text="Run Generic Test", 
+                  command=self.run_generic_test).pack(side="left", padx=5)
+        ttk.Button(button_frame, text="Clear Results", 
+                  command=self.clear_test_results).pack(side="left", padx=5)
+        
+        # Test results display
+        results_frame = ttk.LabelFrame(runner_frame, text="Test Execution Results", padding=10)
+        results_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        
+        self.test_results_text = scrolledtext.ScrolledText(results_frame, height=20, width=80, wrap=tk.WORD)
+        self.test_results_text.pack(fill="both", expand=True)
+        
+        # Initial message
+        self.test_results_text.insert(tk.END, "Test Runner Ready - Day 6 Implementation\n")
+        self.test_results_text.insert(tk.END, "-" * 50 + "\n")
+        self.test_results_text.insert(tk.END, "Features:\n")
+        self.test_results_text.insert(tk.END, "• Automated OK button clicking\n")
+        self.test_results_text.insert(tk.END, "• Login credential entry\n")
+        self.test_results_text.insert(tk.END, "• Element assertions\n")
+        self.test_results_text.insert(tk.END, "• Safety compliance checking\n")
+        self.test_results_text.insert(tk.END, "\nInstructions:\n")
+        self.test_results_text.insert(tk.END, "1. Connect to device first (Device Connection tab)\n")
+        self.test_results_text.insert(tk.END, "2. Open InLinea app on device\n")
+        self.test_results_text.insert(tk.END, "3. Click 'Run Login Test' to automate login\n")
+        self.test_results_text.insert(tk.END, "-" * 50 + "\n\n")
+    
+    def run_login_test(self):
+        """Run automated login test with assertions"""
+        if not self.driver:
+            messagebox.showerror("Error", "Please connect to device first")
+            return
+        
+        self.test_results_text.insert(tk.END, "\n" + "="*50 + "\n")
+        self.test_results_text.insert(tk.END, "STARTING LOGIN TEST\n")
+        self.test_results_text.insert(tk.END, "="*50 + "\n")
+        
+        try:
+            from test_runner_day6 import BankingTestRunner, InLineaLoginTest
+            
+            runner = BankingTestRunner(
+                self.driver, 
+                screenshots_dir=screenshots_dir
+            )
+            login_test = InLineaLoginTest(runner)
+            
+            username = self.test_username.get()
+            password = self.test_password.get()
+            
+            self.test_results_text.insert(tk.END, f"Username: {username}\n")
+            self.test_results_text.insert(tk.END, f"Password: {'*' * len(password)}\n\n")
+            
+            # Run the test
+            results = login_test.run_login_test(username, password)
+            
+            # Display results
+            self.test_results_text.insert(tk.END, f"\nTest Name: {results['test_name']}\n")
+            self.test_results_text.insert(tk.END, f"Overall Status: {results['status']}\n")
+            self.test_results_text.insert(tk.END, f"Steps Passed: {results['passed_steps']}/{results['total_steps']}\n")
+            self.test_results_text.insert(tk.END, "\nStep Details:\n")
+            self.test_results_text.insert(tk.END, "-" * 40 + "\n")
+            
+            for i, step in enumerate(results['steps'], 1):
+                status_symbol = "✓" if step['status'].value == 'passed' else "✗"
+                self.test_results_text.insert(tk.END, 
+                    f"{i}. [{status_symbol}] {step['description']}\n")
+                if step['message']:
+                    self.test_results_text.insert(tk.END, f"   → {step['message']}\n")
+                if step.get('screenshot'):
+                    self.test_results_text.insert(tk.END, f"   📷 Screenshot: {step['screenshot']}\n")
+            
+            self.test_results_text.insert(tk.END, "\n" + "="*50 + "\n")
+            self.test_results_text.insert(tk.END, "TEST COMPLETED\n")
+            self.test_results_text.insert(tk.END, "="*50 + "\n")
+            self.test_results_text.see(tk.END)
+            
+            if results['status'] == 'PASSED':
+                messagebox.showinfo("Test Passed", "Login test completed successfully!")
+            else:
+                messagebox.showwarning("Test Failed", f"Test failed: {results.get('error_message', 'Check step details')}")
+                
+        except ImportError:
+            error_msg = "test_runner_day6.py not found. Please create the test runner file."
+            self.test_results_text.insert(tk.END, f"\nERROR: {error_msg}\n")
+            self.log_to_server("Test runner module not found")
+            messagebox.showerror("Module Missing", error_msg)
+        except Exception as e:
+            self.test_results_text.insert(tk.END, f"\nERROR: {str(e)}\n")
+            self.log_to_server(f"Test execution error: {str(e)}")
+            messagebox.showerror("Test Error", str(e))
+    
+    def test_ok_button(self):
+        """Test clicking OK button only"""
+        if not self.driver:
+            messagebox.showerror("Error", "Please connect to device first")
+            return
+        
+        self.test_results_text.insert(tk.END, "\nTesting OK button click...\n")
+        
+        try:
+            from test_runner_day6 import BankingTestRunner
+            
+            runner = BankingTestRunner(self.driver, screenshots_dir=screenshots_dir)
+            
+            ok_test = {
+                'name': 'OK_Button_Test',
+                'steps': [
+                    {
+                        'action': 'click',
+                        'locator_strategy': 'xpath',
+                        'locator_value': '//android.widget.Button[@text="OK" or @text="Ok" or @text="ok"]',
+                        'description': 'Click OK button',
+                        'wait_time': 5
+                    }
+                ]
+            }
+            
+            results = runner.run_test_case(ok_test)
+            
+            if results['passed_steps'] > 0:
+                self.test_results_text.insert(tk.END, "✓ OK button clicked successfully!\n")
+                self.log_to_server("OK button test passed")
+            else:
+                self.test_results_text.insert(tk.END, "✗ No OK button found or click failed\n")
+                self.log_to_server("OK button test failed")
+                
+        except ImportError:
+            self.test_results_text.insert(tk.END, "Error: test_runner_day6.py not found\n")
+        except Exception as e:
+            self.test_results_text.insert(tk.END, f"Error: {str(e)}\n")
+    
+    def run_generic_test(self):
+        """Run generic test on scanned elements"""
+        if not self.driver:
+            messagebox.showerror("Error", "Please connect to device first")
+            return
+        
+        if not hasattr(self, 'last_scan_results') or not self.last_scan_results:
+            messagebox.showwarning("No Scan Data", "Please scan a screen first (UI Scanner tab)")
+            return
+        
+        try:
+            from test_runner_day6 import BankingTestRunner, create_generic_test_for_elements
+            
+            runner = BankingTestRunner(self.driver, screenshots_dir=screenshots_dir)
+            
+            elements = self.last_scan_results.get('elements', [])
+            test_case = create_generic_test_for_elements(elements)
+            
+            self.test_results_text.insert(tk.END, "\nRunning generic test on scanned elements...\n")
+            results = runner.run_test_case(test_case)
+            
+            self.test_results_text.insert(tk.END, f"Tested {results['total_steps']} elements\n")
+            self.test_results_text.insert(tk.END, f"Passed: {results['passed_steps']}\n")
+            self.test_results_text.insert(tk.END, f"Failed: {results['failed_steps']}\n")
+            
+        except ImportError:
+            self.test_results_text.insert(tk.END, "Error: test_runner_day6.py not found\n")
+        except Exception as e:
+            self.test_results_text.insert(tk.END, f"Error: {str(e)}\n")
+    
+    def clear_test_results(self):
+        """Clear test results display"""
+        self.test_results_text.delete(1.0, tk.END)
+        self.test_results_text.insert(tk.END, "Test results cleared.\n")
+        self.log_to_server("Test results cleared")
     
     def log_to_server(self, message):
         """Add message to server logs"""
@@ -1059,7 +1225,7 @@ End: {stats.get('data_date_range', {}).get('end', 'N/A')}
                 messagebox.showinfo("Export Successful", f"Exported {exported_count} test cases")
                 self.refresh_export_history()
             else:
-                messagebox.showwarning("No Data", "No test cases found to export")
+               messagebox.showwarning("No Data", "No test cases found to export")
                 
         except ImportError:
             messagebox.showerror("Module Missing", "database_manager_day5.py not found")
@@ -1109,7 +1275,7 @@ End: {stats.get('data_date_range', {}).get('end', 'N/A')}
     
     def run(self):
         """Start the application"""
-        logger.info("Starting Banking Automation Tool v5.0")
+        logger.info("Starting Banking Automation Tool v6.0")
         self.root.protocol("WM_DELETE_WINDOW", lambda: (self.cleanup(), self.root.destroy()))
         
         if APPIUM_AVAILABLE:
