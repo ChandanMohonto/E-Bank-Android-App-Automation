@@ -1,0 +1,20 @@
+{
+  "name": "Custom Test",
+  "description": "Custom test created at 2025-09-14 01:36",
+  "stop_on_failure": false,
+  "steps": [
+    {
+      "action": "click",
+      "locator_strategy": "xpath",
+      "locator_value": "//android.widget.TextView[@resource-id='ch.bsct.ebanking.mobile:id/title']",
+      "data": null,
+      "description": "click on Scan Invoice On Computer",
+      "wait_time": 5,
+      "element_info": {
+        "name": "Scan Invoice On Computer",
+        "locator_strategy": "xpath",
+        "locator_value": "//android.widget.TextView[@resource-id='ch.bsct.ebanking.mobile:id/title']"
+      }
+    }
+  ]
+}

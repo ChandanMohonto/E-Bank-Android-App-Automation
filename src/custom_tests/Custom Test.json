@@ -1,0 +1,46 @@
+{
+  "name": "Custom Test",
+  "description": "Custom test created at 2025-09-13 02:00",
+  "stop_on_failure": false,
+  "steps": [
+    {
+      "action": "clear",
+      "locator_strategy": "xpath",
+      "locator_value": "",
+      "data": null,
+      "description": "clear on 1234",
+      "element_info": {
+        "name": "1234",
+        "locator_strategy": "xpath",
+        "locator_value": "",
+        "safety_level": "UNKNOWN"
+      }
+    },
+    {
+      "action": "type",
+      "locator_strategy": "id",
+      "locator_value": "ch.bsct.ebanking.mobile:id/username_input_wrapper",
+      "data": "123456",
+      "description": "sds",
+      "element_info": {
+        "name": "username_input_wrapper",
+        "locator_strategy": "id",
+        "locator_value": "ch.bsct.ebanking.mobile:id/username_input_wrapper",
+        "safety_level": "SAFE"
+      }
+    },
+    {
+      "action": "type",
+      "locator_strategy": "id",
+      "locator_value": "ch.bsct.ebanking.mobile:id/password_input_wrapper",
+      "data": "123456",
+      "description": "sds",
+      "element_info": {
+        "name": "password_input_wrapper",
+        "locator_strategy": "id",
+        "locator_value": "ch.bsct.ebanking.mobile:id/password_input_wrapper",
+        "safety_level": "HIGH_RISK"
+      }
+    }
+  ]
+}

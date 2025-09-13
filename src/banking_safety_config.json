@@ -1,0 +1,62 @@
+{
+    "forbidden_elements": {
+        "resource_ids": [
+            "password",
+            "pin",
+            "cvv",
+            "otp",
+            "token",
+            "biometric",
+            "transfer_amount",
+            "account_number",
+            "routing_number",
+            "confirm_payment",
+            "execute_transfer",
+            "submit_transaction"
+        ],
+        "text_patterns": [
+            "transfer.*\\$?\\d+",
+            "pay.*\\$?\\d+",
+            "send.*\\$?\\d+",
+            "confirm.*transaction",
+            "execute.*payment",
+            "enter.*password",
+            "enter.*pin"
+        ],
+        "class_names": [
+            "PasswordEditText",
+            "PinEditText",
+            "SecureEditText"
+        ]
+    },
+    "restricted_actions": [
+        "tap_transfer_button",
+        "enter_amount",
+        "confirm_transaction",
+        "submit_payment",
+        "authenticate_biometric"
+    ],
+    "safe_navigation": [
+        "menu",
+        "settings",
+        "help",
+        "about",
+        "back",
+        "home",
+        "profile_view",
+        "statement_view",
+        "contact_info"
+    ],
+    "compliance_requirements": {
+        "max_session_duration": 1800,
+        "required_confirmations": 3,
+        "audit_all_actions": true,
+        "screenshot_sensitive_screens": false,
+        "log_retention_days": 90
+    },
+    "alert_thresholds": {
+        "high_risk_elements_per_screen": 5,
+        "forbidden_actions_per_session": 0,
+        "session_duration_warning": 1200
+    }
+}
