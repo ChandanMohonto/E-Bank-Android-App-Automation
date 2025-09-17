@@ -435,7 +435,7 @@ class BankingAutomationApp:
         title_frame = tk.Frame(self.root)
         title_frame.pack(fill="x", padx=10, pady=5)
         
-        tk.Label(title_frame, text="InLinea Banking Automation v10.0 - Complete Enhanced Testing @ckm", 
+        tk.Label(title_frame, text="InLinea Banking Automation v10.0 - Complete Enhanced Testing", 
                 font=("Arial", 16, "bold")).pack(side="left")
         
         # Warning
@@ -467,205 +467,161 @@ class BankingAutomationApp:
         self.main_progress_bar = ttk.Progressbar(status_frame, length=200, mode='indeterminate')
         self.main_progress_bar.pack(side="right", padx=5)
     
-    def create_interface(self):
-    # Title
-    title_frame = tk.Frame(self.root)
-    title_frame.pack(fill="x", padx=10, pady=5)
-    tk.Label(title_frame, text="InLinea Banking Automation v10.0 - Complete Enhanced Testing @ckm", 
-            font=("Arial", 16, "bold")).pack(side="left")
+    def create_server_tab(self):
+        """Dedicated Appium Server tab with progress bar and log"""
+        server_frame = ttk.Frame(self.notebook)
+        self.notebook.add(server_frame, text="🚀 Server")
+        
+        # Server controls frame
+        control_frame = ttk.LabelFrame(server_frame, text="Appium Server Control", padding=10)
+        control_frame.pack(fill="x", padx=10, pady=10)
+        
+        # Server status
+        self.server_status_var = tk.StringVar(value="⚪ Server Not Running")
+        tk.Label(control_frame, textvariable=self.server_status_var, 
+                font=("Arial", 12, "bold")).pack(pady=5)
+        
+        # Server control buttons
+        button_frame = ttk.Frame(control_frame)
+        button_frame.pack(pady=5)
+        
+        self.start_server_btn = ttk.Button(button_frame, text="▶️ Start Server", 
+                                          command=self.start_appium_with_progress)
+        self.start_server_btn.pack(side="left", padx=5)
+        
+        self.stop_server_btn = ttk.Button(button_frame, text="⏹️ Stop Server", 
+                                         command=self.stop_appium, state="disabled")
+        self.stop_server_btn.pack(side="left", padx=5)
+        
+        ttk.Button(button_frame, text="🔄 Check Status", 
+                  command=self.check_server_status).pack(side="left", padx=5)
+        
+        ttk.Button(button_frame, text="📋 Install Appium", 
+                  command=self.install_appium).pack(side="left", padx=5)
+        
+        # Server progress bar
+        progress_frame = ttk.Frame(control_frame)
+        progress_frame.pack(fill="x", pady=10)
+        
+        tk.Label(progress_frame, text="Server Progress:").pack(anchor="w")
+        self.server_progress = ttk.Progressbar(progress_frame, mode='indeterminate', length=500)
+        self.server_progress.pack(fill="x", pady=5)
+        
+        self.server_progress_label = tk.Label(progress_frame, text="")
+        self.server_progress_label.pack(anchor="w")
+        
+        # Server log frame
+        log_frame = ttk.LabelFrame(server_frame, text="Server Log", padding=10)
+        log_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        
+        # Log display
+        self.server_log = scrolledtext.ScrolledText(log_frame, height=20, wrap=tk.WORD, 
+                                                    font=("Consolas", 9))
+        self.server_log.pack(fill="both", expand=True)
+        
+        # Log controls
+        log_controls = ttk.Frame(log_frame)
+        log_controls.pack(fill="x", pady=5)
+        
+        ttk.Button(log_controls, text="📋 Clear Log", 
+                  command=lambda: self.server_log.delete(1.0, tk.END)).pack(side="left", padx=5)
+        ttk.Button(log_controls, text="💾 Save Log", 
+                  command=self.save_server_log).pack(side="left", padx=5)
+        ttk.Button(log_controls, text="🔍 Auto Scroll", 
+                  command=self.toggle_auto_scroll).pack(side="left", padx=5)
     
-    # Warning
-    warning_frame = tk.Frame(self.root, bg="red", relief="solid", borderwidth=2)
-    warning_frame.pack(fill="x", padx=10, pady=5)
-    tk.Label(warning_frame, text="⚠️ UNRESTRICTED MODE: No Safety Checks - Test Environment Only!", 
-            bg="red", fg="white", font=("Arial", 10, "bold")).pack(pady=5)
+    def create_device_tab(self):
+        """Dedicated Device Connection tab with progress bar and log"""
+        device_frame = ttk.Frame(self.notebook)
+        self.notebook.add(device_frame, text="📱 Device")
+        
+        # Device connection frame
+        connect_frame = ttk.LabelFrame(device_frame, text="Device Connection", padding=10)
+        connect_frame.pack(fill="x", padx=10, pady=10)
+        
+        # Device status
+        self.connection_status_var = tk.StringVar(value="⚪ Not Connected")
+        tk.Label(connect_frame, textvariable=self.connection_status_var, 
+                font=("Arial", 12, "bold")).pack(pady=5)
+        
+        # Device list and refresh
+        device_list_frame = ttk.Frame(connect_frame)
+        device_list_frame.pack(fill="x", pady=5)
+        
+        tk.Label(device_list_frame, text="Available Devices:").pack(anchor="w")
+        
+        list_control_frame = ttk.Frame(device_list_frame)
+        list_control_frame.pack(fill="x")
+        
+        ttk.Button(list_control_frame, text="🔄 Refresh Devices", 
+                  command=self.refresh_devices).pack(side="right", padx=5)
+        
+        self.device_listbox = tk.Listbox(device_list_frame, height=4)
+        self.device_listbox.pack(fill="x", pady=5)
+        self.device_listbox.bind('<Double-Button-1>', self.on_device_select)
+        
+        # Device settings
+        settings_frame = ttk.Frame(connect_frame)
+        settings_frame.pack(fill="x", pady=5)
+        
+        # Device UUID
+        uuid_frame = ttk.Frame(settings_frame)
+        uuid_frame.pack(fill="x", pady=2)
+        tk.Label(uuid_frame, text="Device UUID:", width=15, anchor="w").pack(side="left")
+        self.device_id_var = tk.StringVar()
+        ttk.Entry(uuid_frame, textvariable=self.device_id_var, width=40).pack(side="left", fill="x", expand=True)
+        
+        # App Package
+        package_frame = ttk.Frame(settings_frame)
+        package_frame.pack(fill="x", pady=2)
+        tk.Label(package_frame, text="App Package:", width=15, anchor="w").pack(side="left")
+        self.app_package_var = tk.StringVar(value="ch.bsct.ebanking.mobile")
+        ttk.Entry(package_frame, textvariable=self.app_package_var, width=40).pack(side="left", fill="x", expand=True)
+        
+        # Connection buttons
+        connect_buttons = ttk.Frame(connect_frame)
+        connect_buttons.pack(pady=10)
+        
+        self.connect_btn = ttk.Button(connect_buttons, text="🔗 Connect Device", 
+                                     command=self.connect_device_with_progress)
+        self.connect_btn.pack(side="left", padx=5)
+        
+        self.disconnect_btn = ttk.Button(connect_buttons, text="🔌 Disconnect", 
+                                        command=self.disconnect_device, state="disabled")
+        self.disconnect_btn.pack(side="left", padx=5)
+        
+        ttk.Button(connect_buttons, text="📱 Device Info", 
+                  command=self.show_device_info).pack(side="left", padx=5)
+        
+        # Device progress bar
+        progress_frame = ttk.Frame(connect_frame)
+        progress_frame.pack(fill="x", pady=10)
+        
+        tk.Label(progress_frame, text="Connection Progress:").pack(anchor="w")
+        self.device_progress = ttk.Progressbar(progress_frame, mode='indeterminate', length=500)
+        self.device_progress.pack(fill="x", pady=5)
+        
+        self.device_progress_label = tk.Label(progress_frame, text="")
+        self.device_progress_label.pack(anchor="w")
+        
+        # Device log frame
+        device_log_frame = ttk.LabelFrame(device_frame, text="Device Log", padding=10)
+        device_log_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        
+        # Log display
+        self.device_log = scrolledtext.ScrolledText(device_log_frame, height=15, wrap=tk.WORD, 
+                                                    font=("Consolas", 9))
+        self.device_log.pack(fill="both", expand=True)
+        
+        # Log controls
+        device_log_controls = ttk.Frame(device_log_frame)
+        device_log_controls.pack(fill="x", pady=5)
+        
+        ttk.Button(device_log_controls, text="📋 Clear Log", 
+                  command=lambda: self.device_log.delete(1.0, tk.END)).pack(side="left", padx=5)
+        ttk.Button(device_log_controls, text="💾 Save Log", 
+                  command=self.save_device_log).pack(side="left", padx=5)
     
-    # Main notebook
-    self.notebook = ttk.Notebook(self.root)
-    self.notebook.pack(fill="both", expand=True, padx=10, pady=10)
-    
-    self.create_server_tab()
-    self.create_device_tab()
-    self.create_scanner_tab()
-    self.create_custom_test_tab()
-    self.create_test_tab()
-    self.create_database_tab()
-    self.create_reports_tab()
-    
-    # Status bar with progress
-    status_frame = tk.Frame(self.root)
-    status_frame.pack(side="bottom", fill="x")
-    
-    self.status_var = tk.StringVar(value="Ready")
-    status_bar = tk.Label(status_frame, textvariable=self.status_var, relief="sunken", anchor="w")
-    status_bar.pack(side="left", fill="x", expand=True)
-    
-    self.main_progress_bar = ttk.Progressbar(status_frame, length=200, mode='indeterminate')
-    self.main_progress_bar.pack(side="right", padx=5)
-
-def create_server_tab(self):
-    """Dedicated Appium Server tab with progress bar and log"""
-    server_frame = ttk.Frame(self.notebook)
-    self.notebook.add(server_frame, text="🚀 Server")
-    
-    # Server controls frame
-    control_frame = ttk.LabelFrame(server_frame, text="Appium Server Control", padding=10)
-    control_frame.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
-    
-    # Server status
-    self.server_status_var = tk.StringVar(value="⚪ Server Not Running")
-    tk.Label(control_frame, textvariable=self.server_status_var, 
-            font=("Arial", 12, "bold")).grid(row=0, column=0, pady=5, sticky="w")
-    
-    # Server control buttons
-    button_frame = ttk.Frame(control_frame)
-    button_frame.grid(row=1, column=0, pady=5, sticky="ew")
-    
-    self.start_server_btn = ttk.Button(button_frame, text="▶️ Start Server", 
-                                      command=self.start_appium_with_progress)
-    self.start_server_btn.grid(row=0, column=0, padx=5)
-    
-    self.stop_server_btn = ttk.Button(button_frame, text="⏹️ Stop Server", 
-                                     command=self.stop_appium, state="disabled")
-    self.stop_server_btn.grid(row=0, column=1, padx=5)
-    
-    ttk.Button(button_frame, text="🔄 Check Status", 
-              command=self.check_server_status).grid(row=0, column=2, padx=5)
-    
-    ttk.Button(button_frame, text="📋 Install Appium", 
-              command=self.install_appium).grid(row=0, column=3, padx=5)
-    
-    # Server progress bar
-    progress_frame = ttk.Frame(control_frame)
-    progress_frame.grid(row=2, column=0, pady=10, sticky="ew")
-    
-    tk.Label(progress_frame, text="Server Progress:").grid(row=0, column=0, sticky="w")
-    self.server_progress = ttk.Progressbar(progress_frame, mode='indeterminate', length=500)
-    self.server_progress.grid(row=1, column=0, pady=5, sticky="ew")
-    
-    self.server_progress_label = tk.Label(progress_frame, text="")
-    self.server_progress_label.grid(row=2, column=0, sticky="w")
-    
-    # Server log frame
-    log_frame = ttk.LabelFrame(server_frame, text="Server Log", padding=10)
-    log_frame.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
-    
-    # Log display
-    self.server_log = scrolledtext.ScrolledText(log_frame, height=20, wrap=tk.WORD, 
-                                                font=("Consolas", 9))
-    self.server_log.grid(row=0, column=0, sticky="nsew")
-    
-    # Log controls
-    log_controls = ttk.Frame(log_frame)
-    log_controls.grid(row=1, column=0, pady=5, sticky="ew")
-    
-    ttk.Button(log_controls, text="📋 Clear Log", 
-              command=lambda: self.server_log.delete(1.0, tk.END)).grid(row=0, column=0, padx=5, sticky="w")
-    ttk.Button(log_controls, text="💾 Save Log", 
-              command=self.save_server_log).grid(row=0, column=1, padx=5)
-    ttk.Button(log_controls, text="🔍 Auto Scroll", 
-              command=self.toggle_auto_scroll).grid(row=0, column=2, padx=5)
-    
-    # Ensure proper resizing of frames
-    server_frame.grid_rowconfigure(0, weight=1)
-    server_frame.grid_rowconfigure(1, weight=3)
-    server_frame.grid_columnconfigure(0, weight=1)
-    log_frame.grid_rowconfigure(0, weight=1)
-    log_frame.grid_columnconfigure(0, weight=1)
-    button_frame.grid_columnconfigure(0, weight=1)
-    
-def create_device_tab(self):
-    """Dedicated Device Connection tab with progress bar and log"""
-    device_frame = ttk.Frame(self.notebook)
-    self.notebook.add(device_frame, text="📱 Device")
-    
-    # Device connection frame
-    connect_frame = ttk.LabelFrame(device_frame, text="Device Connection", padding=10)
-    connect_frame.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
-    
-    # Device status
-    self.connection_status_var = tk.StringVar(value="⚪ Not Connected")
-    tk.Label(connect_frame, textvariable=self.connection_status_var, 
-            font=("Arial", 12, "bold")).grid(row=0, column=0, pady=5, sticky="w")
-    
-    # Device list and refresh
-    device_list_frame = ttk.Frame(connect_frame)
-    device_list_frame.grid(row=1, column=0, fill="x", pady=5)
-    
-    tk.Label(device_list_frame, text="Available Devices:").grid(row=0, column=0, sticky="w")
-    
-    list_control_frame = ttk.Frame(device_list_frame)
-    list_control_frame.grid(row=1, column=0, fill="x")
-    
-    ttk.Button(list_control_frame, text="🔄 Refresh Devices", 
-              command=self.refresh_devices).grid(row=0, column=1, padx=5)
-    
-    self.device_listbox = tk.Listbox(device_list_frame, height=4)
-    self.device_listbox.grid(row=2, column=0, fill="x", pady=5)
-    self.device_listbox.bind('<Double-Button-1>', self.on_device_select)
-    
-    # Device settings
-    settings_frame = ttk.Frame(connect_frame)
-    settings_frame.grid(row=2, column=0, fill="x", pady=5)
-    
-    # Device UUID
-    uuid_frame = ttk.Frame(settings_frame)
-    uuid_frame.grid(row=0, column=0, fill="x", pady=2)
-    tk.Label(uuid_frame, text="Device UUID:", width=15, anchor="w").grid(row=0, column=0, sticky="w")
-    self.device_id_var = tk.StringVar()
-    ttk.Entry(uuid_frame, textvariable=self.device_id_var, width=40).grid(row=0, column=1, sticky="ew")
-    
-    # App Package
-    package_frame = ttk.Frame(settings_frame)
-    package_frame.grid(row=1, column=0, fill="x", pady=2)
-    tk.Label(package_frame, text="App Package:", width=15, anchor="w").grid(row=0, column=0, sticky="w")
-    self.app_package_var = tk.StringVar(value="ch.bsct.ebanking.mobile")
-    ttk.Entry(package_frame, textvariable=self.app_package_var, width=40).grid(row=0, column=1, sticky="ew")
-    
-    # Connection buttons
-    connect_buttons = ttk.Frame(connect_frame)
-    connect_buttons.grid(row=3, column=0, pady=10)
-    
-    self.connect_btn = ttk.Button(connect_buttons, text="🔗 Connect Device", 
-                                 command=self.connect_device_with_progress)
-    self.connect_btn.grid(row=0, column=0, padx=5)
-    
-    self.disconnect_btn = ttk.Button(connect_buttons, text="🔌 Disconnect", 
-                                    command=self.disconnect_device, state="disabled")
-    self.disconnect_btn.grid(row=0, column=1, padx=5)
-    
-    ttk.Button(connect_buttons, text="📱 Device Info", 
-              command=self.show_device_info).grid(row=0, column=2, padx=5)
-    
-    # Device progress bar
-    progress_frame = ttk.Frame(connect_frame)
-    progress_frame.grid(row=4, column=0, fill="x", pady=10)
-    
-    tk.Label(progress_frame, text="Connection Progress:").grid(row=0, column=0, sticky="w")
-    self.device_progress = ttk.Progressbar(progress_frame, mode='indeterminate', length=500)
-    self.device_progress.grid(row=1, column=0, pady=5, sticky="ew")
-    
-    self.device_progress_label = tk.Label(progress_frame, text="")
-    self.device_progress_label.grid(row=2, column=0, sticky="w")
-    
-    # Device log frame
-    device_log_frame = ttk.LabelFrame(device_frame, text="Device Log", padding=10)
-    device_log_frame.grid(row=5, column=0, padx=10, pady=10, sticky="nsew")
-    
-    # Log display
-    self.device_log = scrolledtext.ScrolledText(device_log_frame, height=15, wrap=tk.WORD, 
-                                                font=("Consolas", 9))
-    self.device_log.grid(row=0, column=0, sticky="nsew")
-    
-    # Log controls
-    device_log_controls = ttk.Frame(device_log_frame)
-    device_log_controls.grid(row=1, column=0, pady=5, sticky="ew")
-    
-    ttk.Button(device_log_controls, text="📋 Clear Log", 
-              command=lambda: self.device_log.delete(1.0, tk.END)).grid(row=0, column=0, padx=5)
-    ttk.Button(device_log_controls, text="💾 Save Log", 
-              command=self.save_device_log).grid(row=0, column=1, padx=5)
-
     def create_scanner_tab(self):
         """Enhanced UI Scanner tab - ALL elements without ANY restrictions"""
         scanner_frame = ttk.Frame(self.notebook)
@@ -1192,7 +1148,7 @@ def create_device_tab(self):
                 options.automation_name = "UiAutomator2"
                 options.no_reset = True
                 options.full_reset = False
-                options.new_command_timeout = 1000
+                options.new_command_timeout = 300
                 options.auto_grant_permissions = True
                 options.ignore_hidden_api_policy_error = True
                 

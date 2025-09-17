@@ -9,3 +9,6 @@ reports/
 
 # Ignore the screenshots/ directory
 screenshots/
+custom_tests/
+exports/
+testFile.py
