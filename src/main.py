@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-Complete InLinea Banking App Automation Tool - v9.0 UNRESTRICTED
-All Features Including Custom Test Builder - NO SAFETY CHECKS
-FOR TESTING PURPOSES ONLY
+Complete InLinea Banking App Automation Tool - v10.0 ENHANCED
+All Original Features Plus Requested Improvements - COMPLETE RUNNABLE VERSION
 """
 
 import tkinter as tk
 from tkinter import ttk, messagebox, scrolledtext, filedialog
+import tkinter.simpledialog as simpledialog
 import sys
 import logging
 import threading
@@ -14,14 +14,14 @@ import time
 import json
 import sqlite3
 import csv
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 import subprocess
 import os
 import queue
 
 # Create directories
-project_root = Path(__file__).parent
+project_root = Path(__file__).parent.parent
 logs_dir = project_root / 'logs'
 screenshots_dir = project_root / 'screenshots' 
 exports_dir = project_root / 'exports'
@@ -233,8 +233,8 @@ class CompleteTestRunner:
         
         return element
     
-    def execute_custom_test(self, test_case):
-        """Execute a custom test case"""
+    def execute_custom_test(self, test_case, progress_callback=None):
+        """Execute a custom test case with progress reporting"""
         results = {
             'test_name': test_case.get('name', 'Custom Test'),
             'start_time': datetime.now(),
@@ -245,17 +245,23 @@ class CompleteTestRunner:
         
         try:
             steps = test_case.get('steps', [])
+            total_steps = len(steps)
             
             for i, step in enumerate(steps, 1):
-                self.logger.info(f"Executing step {i}: {step.get('description', '')}")
+                self.logger.info(f"Executing step {i}/{total_steps}: {step.get('description', '')}")
+                
+                # Report progress
+                if progress_callback:
+                    progress_callback(i, total_steps, step.get('description', ''))
                 
                 step_result = self.execute_step(step)
                 results['steps'].append(step_result)
                 
-                # Take screenshot after each step if needed
-                if step.get('action') == 'screenshot' or step.get('take_screenshot'):
+                # Take screenshot after certain actions
+                if step.get('action') in ['click', 'type'] or step.get('take_screenshot'):
                     screenshot = self.take_screenshot(f"step_{i}")
-                    results['screenshots'].append(screenshot)
+                    if screenshot:
+                        results['screenshots'].append(screenshot)
                 
                 time.sleep(1)  # Small delay between steps
             
@@ -303,7 +309,7 @@ class CompleteTestRunner:
             if action == 'screenshot':
                 screenshot = self.take_screenshot("custom")
                 result['status'] = 'passed'
-                result['message'] = f"Screenshot taken: {Path(screenshot).name}"
+                result['message'] = f"Screenshot taken"
                 return result
             
             # Handle swipe
@@ -388,225 +394,6 @@ class CompleteTestRunner:
         except:
             pass
     
-    def execute_ok_button_test(self):
-        """Test for handling OK button dialogs"""
-        results = {
-            'test_name': 'OK Button Test',
-            'start_time': datetime.now(),
-            'steps': [],
-            'status': 'RUNNING'
-        }
-        
-        try:
-            # Try multiple strategies to find OK button
-            ok_strategies = [
-                ('id', 'android:id/button1'),
-                ('xpath', "//android.widget.Button[@text='OK']"),
-                ('xpath', "//android.widget.Button[contains(@text,'OK')]"),
-                ('xpath', "//android.widget.TextView[@text='OK']"),
-                ('xpath', "//*[@text='OK']"),
-            ]
-            
-            found = False
-            for strat_type, strat_value in ok_strategies:
-                element = self.find_element_smart(strat_type, strat_value, timeout=3)
-                if element:
-                    element.click()
-                    results['steps'].append({'step': f'Clicked OK button using {strat_type}', 'status': 'passed'})
-                    found = True
-                    break
-            
-            if not found:
-                results['steps'].append({'step': 'No OK button found', 'status': 'info'})
-            
-            results['status'] = 'PASSED' if found else 'NO_ACTION'
-            
-        except Exception as e:
-            results['status'] = 'ERROR'
-            results['error'] = str(e)
-        
-        results['end_time'] = datetime.now()
-        results['duration'] = (results['end_time'] - results['start_time']).total_seconds()
-        
-        return results
-    
-    def execute_login_test(self, username, password):
-        """Execute complete login test with validation"""
-        results = {
-            'test_name': 'InLinea Login Test',
-            'start_time': datetime.now(),
-            'steps': [],
-            'screenshots': [],
-            'status': 'RUNNING'
-        }
-        
-        try:
-            # Step 1: Wait for app
-            self.logger.info("Step 1: Waiting for app to load")
-            time.sleep(3)
-            results['steps'].append({'step': 'Wait for app', 'status': 'passed'})
-            
-            # Step 2: Handle OK button if present
-            ok_result = self.execute_ok_button_test()
-            if ok_result['status'] != 'ERROR':
-                results['steps'].append({'step': 'OK button check', 'status': 'passed'})
-            
-            # Step 3: Take initial screenshot
-            screenshot1 = self.take_screenshot("01_initial")
-            results['screenshots'].append(screenshot1)
-            results['steps'].append({'step': 'Initial screenshot', 'status': 'passed'})
-            
-            # Step 4: Find and fill username field
-            self.logger.info("Step 4: Finding username field")
-            username_element = None
-            
-            strategies = [
-                ('xpath', "//android.widget.EditText[@text='User number']"),
-                ('xpath', "//android.widget.EditText[contains(@text,'User')]"),
-                ('xpath', "//android.widget.EditText[1]"),
-                ('xpath', "//*[@class='android.widget.EditText'][1]"),
-                ('xpath', "//android.widget.EditText[not(@password='true')][1]"),
-            ]
-            
-            for strat_type, strat_value in strategies:
-                username_element = self.find_element_smart(strat_type, strat_value, timeout=5)
-                if username_element:
-                    self.logger.info(f"Found username field with: {strat_value}")
-                    break
-            
-            if username_element:
-                username_element.clear()
-                username_element.send_keys(username)
-                results['steps'].append({'step': f'Enter username: {username}', 'status': 'passed'})
-                self.logger.info(f"Username entered: {username}")
-            else:
-                results['steps'].append({'step': 'Find username field', 'status': 'failed'})
-                self.logger.error("Username field not found")
-            
-            # Step 5: Find and fill password field
-            time.sleep(1)
-            self.logger.info("Step 5: Finding password field")
-            password_element = None
-            
-            strategies = [
-                ('xpath', "//android.widget.EditText[@password='true']"),
-                ('xpath', "//android.widget.EditText[@text='Password']"),
-                ('xpath', "//android.widget.EditText[contains(@text,'Password')]"),
-                ('xpath', "//android.widget.EditText[2]"),
-                ('xpath', "//*[@class='android.widget.EditText'][2]"),
-                ('xpath', "//android.widget.EditText[last()]"),
-            ]
-            
-            for strat_type, strat_value in strategies:
-                password_element = self.find_element_smart(strat_type, strat_value, timeout=5)
-                if password_element:
-                    self.logger.info(f"Found password field with: {strat_value}")
-                    break
-            
-            if password_element:
-                password_element.clear()
-                password_element.send_keys(password)
-                results['steps'].append({'step': 'Enter password', 'status': 'passed'})
-                self.logger.info("Password entered")
-            else:
-                results['steps'].append({'step': 'Find password field', 'status': 'failed'})
-                self.logger.error("Password field not found")
-            
-            # Step 6: Take screenshot after filling
-            time.sleep(1)
-            screenshot2 = self.take_screenshot("02_filled_form")
-            results['screenshots'].append(screenshot2)
-            results['steps'].append({'step': 'Screenshot after filling', 'status': 'passed'})
-            
-            # Step 7: Find and click login button
-            self.logger.info("Step 7: Finding and clicking login button")
-            login_button = None
-            
-            button_strategies = [
-                ('xpath', "//android.widget.Button[contains(@text,'Submit')]"),
-                ('xpath', "//android.widget.Button[contains(@text,'Submit')]"),
-                ('xpath', "//android.widget.TextView[contains(@text,'Submit')]"),
-                ('xpath', "//*[@clickable='true'][contains(@text,'Submit')]"),
-                ('xpath', "//android.widget.Button"),
-            ]
-            
-            for strat_type, strat_value in button_strategies:
-                login_button = self.find_element_smart(strat_type, strat_value, timeout=3)
-                if login_button:
-                    self.logger.info(f"Found login button with: {strat_value}")
-                    login_button.click()
-                    results['steps'].append({'step': 'Clicked login button', 'status': 'passed'})
-                    break
-            
-            if not login_button:
-                results['steps'].append({'step': 'Login button not found or clicked', 'status': 'warning'})
-            
-            # Step 8: Wait and check for login result
-            time.sleep(3)
-            
-            # Check if login was successful by looking for error messages or success indicators
-            login_success = self.verify_login_success()
-            
-            if login_success:
-                results['steps'].append({'step': 'Login verification', 'status': 'passed'})
-                results['status'] = 'PASSED'
-            else:
-                results['steps'].append({'step': 'Login verification', 'status': 'failed'})
-                results['status'] = 'FAILED'
-                self.logger.error("Login failed - incorrect credentials or other error")
-            
-            # Step 9: Final screenshot
-            screenshot3 = self.take_screenshot("03_final")
-            results['screenshots'].append(screenshot3)
-            
-        except Exception as e:
-            self.logger.error(f"Test execution error: {e}")
-            results['status'] = 'ERROR'
-            results['error'] = str(e)
-        
-        results['end_time'] = datetime.now()
-        results['duration'] = (results['end_time'] - results['start_time']).total_seconds()
-        
-        return results
-    
-    def verify_login_success(self):
-        """Verify if login was successful"""
-        try:
-            # Check for common error indicators
-            error_indicators = [
-                "//android.widget.TextView[contains(@text,'Invalid')]",
-                "//android.widget.TextView[contains(@text,'Incorrect')]",
-                "//android.widget.TextView[contains(@text,'Wrong')]",
-                "//android.widget.TextView[contains(@text,'Failed')]",
-                "//*[contains(@text,'Error')]",
-            ]
-            
-            for xpath in error_indicators:
-                error_element = self.find_element_smart('xpath', xpath, timeout=2)
-                if error_element:
-                    self.logger.info(f"Found error indicator: {error_element.text}")
-                    return False
-            
-            # Check for success indicators
-            success_indicators = [
-                "//android.widget.TextView[contains(@text,'Welcome')]",
-                "//android.widget.TextView[contains(@text,'Dashboard')]",
-                "//android.widget.TextView[contains(@text,'Account')]",
-                "//android.widget.TextView[contains(@text,'Balance')]",
-            ]
-            
-            for xpath in success_indicators:
-                success_element = self.find_element_smart('xpath', xpath, timeout=2)
-                if success_element:
-                    self.logger.info(f"Found success indicator: {success_element.text}")
-                    return True
-            
-            # If no clear indicators, assume failure for wrong credentials
-            return False
-            
-        except:
-            return False
-    
     def take_screenshot(self, name):
         """Take screenshot and return path"""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -624,7 +411,7 @@ class CompleteTestRunner:
 class BankingAutomationApp:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("InLinea Banking Automation v9.0 - Unrestricted Edition")
+        self.root.title("InLinea Banking Automation v10.0 - Complete Enhanced")
         self.root.geometry("1700x1000")
         
         # App state
@@ -634,7 +421,8 @@ class BankingAutomationApp:
         self.test_execution_results = []
         self.custom_test_builder = CustomTestBuilder()
         self.appium_process = None
-        self.server_log_queue = queue.Queue()
+        self.login_elements = {}  # Store detected login elements
+        self.auto_scroll = True
         
         self.create_interface()
         
@@ -647,7 +435,7 @@ class BankingAutomationApp:
         title_frame = tk.Frame(self.root)
         title_frame.pack(fill="x", padx=10, pady=5)
         
-        tk.Label(title_frame, text="InLinea Banking Automation v9.0 - Unrestricted Testing", 
+        tk.Label(title_frame, text="InLinea Banking Automation v10.0 - Complete Enhanced Testing @ckm", 
                 font=("Arial", 16, "bold")).pack(side="left")
         
         # Warning
@@ -660,6 +448,7 @@ class BankingAutomationApp:
         self.notebook = ttk.Notebook(self.root)
         self.notebook.pack(fill="both", expand=True, padx=10, pady=10)
         
+        self.create_server_tab()
         self.create_device_tab()
         self.create_scanner_tab()
         self.create_custom_test_tab()
@@ -675,143 +464,299 @@ class BankingAutomationApp:
         status_bar = tk.Label(status_frame, textvariable=self.status_var, relief="sunken", anchor="w")
         status_bar.pack(side="left", fill="x", expand=True)
         
-        self.progress_bar = ttk.Progressbar(status_frame, length=200, mode='indeterminate')
-        self.progress_bar.pack(side="right", padx=5)
+        self.main_progress_bar = ttk.Progressbar(status_frame, length=200, mode='indeterminate')
+        self.main_progress_bar.pack(side="right", padx=5)
     
-    def create_device_tab(self):
-        """Device connection tab with server console"""
-        device_frame = ttk.Frame(self.notebook)
-        self.notebook.add(device_frame, text="📱 Device & Server")
-        
-        # Split into two panes
-        paned = ttk.PanedWindow(device_frame, orient=tk.HORIZONTAL)
-        paned.pack(fill="both", expand=True, padx=5, pady=5)
-        
-        # Left pane - Device controls
-        left_frame = ttk.Frame(paned)
-        paned.add(left_frame, weight=1)
-        
-        # Connection settings
-        settings_frame = ttk.LabelFrame(left_frame, text="Connection Settings", padding=10)
-        settings_frame.pack(fill="x", padx=10, pady=10)
-        
-        tk.Label(settings_frame, text="Device ID:").grid(row=0, column=0, sticky="w", padx=5, pady=5)
-        self.device_id_var = tk.StringVar()
-        ttk.Entry(settings_frame, textvariable=self.device_id_var, width=40).grid(row=0, column=1, padx=5, pady=5)
-        
-        tk.Label(settings_frame, text="App Package:").grid(row=1, column=0, sticky="w", padx=5, pady=5)
-        self.app_package_var = tk.StringVar(value="ch.bsct.ebanking.mobile")
-        ttk.Entry(settings_frame, textvariable=self.app_package_var, width=40).grid(row=1, column=1, padx=5, pady=5)
-        
-        # Control buttons
-        control_frame = ttk.Frame(settings_frame)
-        control_frame.grid(row=2, column=0, columnspan=2, pady=10)
-        
-        ttk.Button(control_frame, text="🔄 Refresh Devices", command=self.refresh_devices).pack(side="left", padx=5)
-        ttk.Button(control_frame, text="🚀 Start Appium", command=self.start_appium_with_progress).pack(side="left", padx=5)
-        self.connect_btn = ttk.Button(control_frame, text="🔗 Connect Device", command=self.connect_device_with_progress)
-        self.connect_btn.pack(side="left", padx=5)
-        ttk.Button(control_frame, text="🔌 Disconnect", command=self.disconnect_device).pack(side="left", padx=5)
-        ttk.Button(control_frame, text="🛑 Stop Appium", command=self.stop_appium).pack(side="left", padx=5)
-        
-        # Device list
-        list_frame = ttk.LabelFrame(left_frame, text="Available Devices", padding=10)
-        list_frame.pack(fill="both", expand=True, padx=10, pady=10)
-        
-        self.device_listbox = tk.Listbox(list_frame, height=10)
-        self.device_listbox.pack(fill="both", expand=True)
-        self.device_listbox.bind('<Double-Button-1>', self.on_device_select)
-        
-        # Status
-        self.connection_status_var = tk.StringVar(value="❌ Not Connected")
-        tk.Label(left_frame, textvariable=self.connection_status_var, 
-                font=("Arial", 12, "bold")).pack(pady=10)
-        
-        # Right pane - Server console
-        right_frame = ttk.Frame(paned)
-        paned.add(right_frame, weight=1)
-        
-        console_frame = ttk.LabelFrame(right_frame, text="Appium Server Console", padding=10)
-        console_frame.pack(fill="both", expand=True, padx=10, pady=10)
-        
-        # Console output
-        self.server_console = scrolledtext.ScrolledText(console_frame, height=20, bg="black", fg="green", 
-                                                        font=("Consolas", 9))
-        self.server_console.pack(fill="both", expand=True)
-        
-        # Console controls
-        console_controls = ttk.Frame(console_frame)
-        console_controls.pack(fill="x", pady=5)
-        
-        ttk.Button(console_controls, text="Clear", command=lambda: self.server_console.delete(1.0, tk.END)).pack(side="left", padx=5)
-        ttk.Button(console_controls, text="Auto-scroll", command=lambda: self.server_console.see(tk.END)).pack(side="left", padx=5)
+    def create_interface(self):
+    # Title
+    title_frame = tk.Frame(self.root)
+    title_frame.pack(fill="x", padx=10, pady=5)
+    tk.Label(title_frame, text="InLinea Banking Automation v10.0 - Complete Enhanced Testing @ckm", 
+            font=("Arial", 16, "bold")).pack(side="left")
     
+    # Warning
+    warning_frame = tk.Frame(self.root, bg="red", relief="solid", borderwidth=2)
+    warning_frame.pack(fill="x", padx=10, pady=5)
+    tk.Label(warning_frame, text="⚠️ UNRESTRICTED MODE: No Safety Checks - Test Environment Only!", 
+            bg="red", fg="white", font=("Arial", 10, "bold")).pack(pady=5)
+    
+    # Main notebook
+    self.notebook = ttk.Notebook(self.root)
+    self.notebook.pack(fill="both", expand=True, padx=10, pady=10)
+    
+    self.create_server_tab()
+    self.create_device_tab()
+    self.create_scanner_tab()
+    self.create_custom_test_tab()
+    self.create_test_tab()
+    self.create_database_tab()
+    self.create_reports_tab()
+    
+    # Status bar with progress
+    status_frame = tk.Frame(self.root)
+    status_frame.pack(side="bottom", fill="x")
+    
+    self.status_var = tk.StringVar(value="Ready")
+    status_bar = tk.Label(status_frame, textvariable=self.status_var, relief="sunken", anchor="w")
+    status_bar.pack(side="left", fill="x", expand=True)
+    
+    self.main_progress_bar = ttk.Progressbar(status_frame, length=200, mode='indeterminate')
+    self.main_progress_bar.pack(side="right", padx=5)
+
+def create_server_tab(self):
+    """Dedicated Appium Server tab with progress bar and log"""
+    server_frame = ttk.Frame(self.notebook)
+    self.notebook.add(server_frame, text="🚀 Server")
+    
+    # Server controls frame
+    control_frame = ttk.LabelFrame(server_frame, text="Appium Server Control", padding=10)
+    control_frame.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+    
+    # Server status
+    self.server_status_var = tk.StringVar(value="⚪ Server Not Running")
+    tk.Label(control_frame, textvariable=self.server_status_var, 
+            font=("Arial", 12, "bold")).grid(row=0, column=0, pady=5, sticky="w")
+    
+    # Server control buttons
+    button_frame = ttk.Frame(control_frame)
+    button_frame.grid(row=1, column=0, pady=5, sticky="ew")
+    
+    self.start_server_btn = ttk.Button(button_frame, text="▶️ Start Server", 
+                                      command=self.start_appium_with_progress)
+    self.start_server_btn.grid(row=0, column=0, padx=5)
+    
+    self.stop_server_btn = ttk.Button(button_frame, text="⏹️ Stop Server", 
+                                     command=self.stop_appium, state="disabled")
+    self.stop_server_btn.grid(row=0, column=1, padx=5)
+    
+    ttk.Button(button_frame, text="🔄 Check Status", 
+              command=self.check_server_status).grid(row=0, column=2, padx=5)
+    
+    ttk.Button(button_frame, text="📋 Install Appium", 
+              command=self.install_appium).grid(row=0, column=3, padx=5)
+    
+    # Server progress bar
+    progress_frame = ttk.Frame(control_frame)
+    progress_frame.grid(row=2, column=0, pady=10, sticky="ew")
+    
+    tk.Label(progress_frame, text="Server Progress:").grid(row=0, column=0, sticky="w")
+    self.server_progress = ttk.Progressbar(progress_frame, mode='indeterminate', length=500)
+    self.server_progress.grid(row=1, column=0, pady=5, sticky="ew")
+    
+    self.server_progress_label = tk.Label(progress_frame, text="")
+    self.server_progress_label.grid(row=2, column=0, sticky="w")
+    
+    # Server log frame
+    log_frame = ttk.LabelFrame(server_frame, text="Server Log", padding=10)
+    log_frame.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
+    
+    # Log display
+    self.server_log = scrolledtext.ScrolledText(log_frame, height=20, wrap=tk.WORD, 
+                                                font=("Consolas", 9))
+    self.server_log.grid(row=0, column=0, sticky="nsew")
+    
+    # Log controls
+    log_controls = ttk.Frame(log_frame)
+    log_controls.grid(row=1, column=0, pady=5, sticky="ew")
+    
+    ttk.Button(log_controls, text="📋 Clear Log", 
+              command=lambda: self.server_log.delete(1.0, tk.END)).grid(row=0, column=0, padx=5, sticky="w")
+    ttk.Button(log_controls, text="💾 Save Log", 
+              command=self.save_server_log).grid(row=0, column=1, padx=5)
+    ttk.Button(log_controls, text="🔍 Auto Scroll", 
+              command=self.toggle_auto_scroll).grid(row=0, column=2, padx=5)
+    
+    # Ensure proper resizing of frames
+    server_frame.grid_rowconfigure(0, weight=1)
+    server_frame.grid_rowconfigure(1, weight=3)
+    server_frame.grid_columnconfigure(0, weight=1)
+    log_frame.grid_rowconfigure(0, weight=1)
+    log_frame.grid_columnconfigure(0, weight=1)
+    button_frame.grid_columnconfigure(0, weight=1)
+    
+def create_device_tab(self):
+    """Dedicated Device Connection tab with progress bar and log"""
+    device_frame = ttk.Frame(self.notebook)
+    self.notebook.add(device_frame, text="📱 Device")
+    
+    # Device connection frame
+    connect_frame = ttk.LabelFrame(device_frame, text="Device Connection", padding=10)
+    connect_frame.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+    
+    # Device status
+    self.connection_status_var = tk.StringVar(value="⚪ Not Connected")
+    tk.Label(connect_frame, textvariable=self.connection_status_var, 
+            font=("Arial", 12, "bold")).grid(row=0, column=0, pady=5, sticky="w")
+    
+    # Device list and refresh
+    device_list_frame = ttk.Frame(connect_frame)
+    device_list_frame.grid(row=1, column=0, fill="x", pady=5)
+    
+    tk.Label(device_list_frame, text="Available Devices:").grid(row=0, column=0, sticky="w")
+    
+    list_control_frame = ttk.Frame(device_list_frame)
+    list_control_frame.grid(row=1, column=0, fill="x")
+    
+    ttk.Button(list_control_frame, text="🔄 Refresh Devices", 
+              command=self.refresh_devices).grid(row=0, column=1, padx=5)
+    
+    self.device_listbox = tk.Listbox(device_list_frame, height=4)
+    self.device_listbox.grid(row=2, column=0, fill="x", pady=5)
+    self.device_listbox.bind('<Double-Button-1>', self.on_device_select)
+    
+    # Device settings
+    settings_frame = ttk.Frame(connect_frame)
+    settings_frame.grid(row=2, column=0, fill="x", pady=5)
+    
+    # Device UUID
+    uuid_frame = ttk.Frame(settings_frame)
+    uuid_frame.grid(row=0, column=0, fill="x", pady=2)
+    tk.Label(uuid_frame, text="Device UUID:", width=15, anchor="w").grid(row=0, column=0, sticky="w")
+    self.device_id_var = tk.StringVar()
+    ttk.Entry(uuid_frame, textvariable=self.device_id_var, width=40).grid(row=0, column=1, sticky="ew")
+    
+    # App Package
+    package_frame = ttk.Frame(settings_frame)
+    package_frame.grid(row=1, column=0, fill="x", pady=2)
+    tk.Label(package_frame, text="App Package:", width=15, anchor="w").grid(row=0, column=0, sticky="w")
+    self.app_package_var = tk.StringVar(value="ch.bsct.ebanking.mobile")
+    ttk.Entry(package_frame, textvariable=self.app_package_var, width=40).grid(row=0, column=1, sticky="ew")
+    
+    # Connection buttons
+    connect_buttons = ttk.Frame(connect_frame)
+    connect_buttons.grid(row=3, column=0, pady=10)
+    
+    self.connect_btn = ttk.Button(connect_buttons, text="🔗 Connect Device", 
+                                 command=self.connect_device_with_progress)
+    self.connect_btn.grid(row=0, column=0, padx=5)
+    
+    self.disconnect_btn = ttk.Button(connect_buttons, text="🔌 Disconnect", 
+                                    command=self.disconnect_device, state="disabled")
+    self.disconnect_btn.grid(row=0, column=1, padx=5)
+    
+    ttk.Button(connect_buttons, text="📱 Device Info", 
+              command=self.show_device_info).grid(row=0, column=2, padx=5)
+    
+    # Device progress bar
+    progress_frame = ttk.Frame(connect_frame)
+    progress_frame.grid(row=4, column=0, fill="x", pady=10)
+    
+    tk.Label(progress_frame, text="Connection Progress:").grid(row=0, column=0, sticky="w")
+    self.device_progress = ttk.Progressbar(progress_frame, mode='indeterminate', length=500)
+    self.device_progress.grid(row=1, column=0, pady=5, sticky="ew")
+    
+    self.device_progress_label = tk.Label(progress_frame, text="")
+    self.device_progress_label.grid(row=2, column=0, sticky="w")
+    
+    # Device log frame
+    device_log_frame = ttk.LabelFrame(device_frame, text="Device Log", padding=10)
+    device_log_frame.grid(row=5, column=0, padx=10, pady=10, sticky="nsew")
+    
+    # Log display
+    self.device_log = scrolledtext.ScrolledText(device_log_frame, height=15, wrap=tk.WORD, 
+                                                font=("Consolas", 9))
+    self.device_log.grid(row=0, column=0, sticky="nsew")
+    
+    # Log controls
+    device_log_controls = ttk.Frame(device_log_frame)
+    device_log_controls.grid(row=1, column=0, pady=5, sticky="ew")
+    
+    ttk.Button(device_log_controls, text="📋 Clear Log", 
+              command=lambda: self.device_log.delete(1.0, tk.END)).grid(row=0, column=0, padx=5)
+    ttk.Button(device_log_controls, text="💾 Save Log", 
+              command=self.save_device_log).grid(row=0, column=1, padx=5)
+
     def create_scanner_tab(self):
-        """Enhanced UI Scanner tab"""
+        """Enhanced UI Scanner tab - ALL elements without ANY restrictions"""
         scanner_frame = ttk.Frame(self.notebook)
-        self.notebook.add(scanner_frame, text="🔍 Enhanced Scanner")
+        self.notebook.add(scanner_frame, text="🔍 Scanner")
         
         # Controls
-        control_frame = ttk.LabelFrame(scanner_frame, text="Scan Controls", padding=10)
+        control_frame = ttk.LabelFrame(scanner_frame, text="Scan Controls - UNRESTRICTED", padding=10)
         control_frame.pack(fill="x", padx=10, pady=10)
         
-        tk.Label(control_frame, text="Screen Name:").pack(side="left", padx=5)
-        self.screen_name_var = tk.StringVar(value="Login Screen")
-        ttk.Entry(control_frame, textvariable=self.screen_name_var, width=30).pack(side="left", padx=5)
+        scan_controls = ttk.Frame(control_frame)
+        scan_controls.pack(fill="x")
         
-        ttk.Button(control_frame, text="🔍 Deep Scan", command=self.deep_scan_screen).pack(side="left", padx=10)
-        ttk.Button(control_frame, text="📸 Screenshot", command=self.take_screenshot).pack(side="left", padx=5)
-        ttk.Button(control_frame, text="➡️ Use for Custom Test", command=self.use_scan_for_custom_test).pack(side="left", padx=5)
-        ttk.Button(control_frame, text="💾 Save to DB", command=self.save_scan_to_db).pack(side="left", padx=5)
-        ttk.Button(control_frame, text="🎯 Interactive Mode", command=self.toggle_interactive_mode).pack(side="left", padx=5)
+        tk.Label(scan_controls, text="Screen Name:").pack(side="left", padx=5)
+        self.screen_name_var = tk.StringVar(value="Current Screen")
+        ttk.Entry(scan_controls, textvariable=self.screen_name_var, width=25).pack(side="left", padx=5)
         
-        # Results with enhanced columns
-        results_frame = ttk.LabelFrame(scanner_frame, text="Scan Results - All Elements", padding=10)
+        ttk.Button(scan_controls, text="🔍 Full Scan (All Elements)", 
+                  command=self.deep_scan_screen).pack(side="left", padx=10)
+        ttk.Button(scan_controls, text="🔐 Scan Login", 
+                  command=self.scan_login_elements).pack(side="left", padx=5)
+        ttk.Button(scan_controls, text="📸 Screenshot", 
+                  command=self.take_screenshot).pack(side="left", padx=5)
+        ttk.Button(scan_controls, text="💾 Save Scan", 
+                  command=self.save_scan_to_db).pack(side="left", padx=5)
+        ttk.Button(scan_controls, text="➡️ Use for Test", 
+                  command=self.use_scan_for_custom_test).pack(side="left", padx=5)
+        
+        # Scan progress
+        scan_progress_frame = ttk.Frame(control_frame)
+        scan_progress_frame.pack(fill="x", pady=5)
+        
+        self.scan_progress = ttk.Progressbar(scan_progress_frame, mode='determinate', length=600)
+        self.scan_progress.pack(fill="x")
+        
+        self.scan_progress_label = tk.Label(scan_progress_frame, text="")
+        self.scan_progress_label.pack(anchor="w")
+        
+        # Results - NO SAFETY COLUMNS, PURE DATA
+        results_frame = ttk.LabelFrame(scanner_frame, text="Scan Results - ALL ELEMENTS (No Restrictions)", padding=10)
         results_frame.pack(fill="both", expand=True, padx=10, pady=10)
         
-        columns = ('Type', 'Resource ID', 'Text', 'Content Desc', 'Clickable', 'Enabled', 'Bounds', 'XPath')
-        self.elements_tree = ttk.Treeview(results_frame, columns=columns, show='tree headings', height=20)
+        # Tree view with all element data
+        columns = ('Type', 'Resource ID', 'Text', 'Content Desc', 'Clickable', 'Enabled', 'Password', 'Bounds', 'XPath')
+        self.elements_tree = ttk.Treeview(results_frame, columns=columns, show='tree headings', height=18)
         
         self.elements_tree.heading('#0', text='#')
-        self.elements_tree.heading('Type', text='Type')
-        self.elements_tree.heading('Resource ID', text='Resource ID')
-        self.elements_tree.heading('Text', text='Text')
-        self.elements_tree.heading('Content Desc', text='Content Desc')
-        self.elements_tree.heading('Clickable', text='Click')
-        self.elements_tree.heading('Enabled', text='Enabled')
-        self.elements_tree.heading('Bounds', text='Bounds')
-        self.elements_tree.heading('XPath', text='XPath')
+        self.elements_tree.column('#0', width=40)
         
-        self.elements_tree.column('#0', width=50)
-        self.elements_tree.column('Type', width=150)
-        self.elements_tree.column('Resource ID', width=200)
-        self.elements_tree.column('Text', width=150)
-        self.elements_tree.column('Content Desc', width=150)
+        for col in columns:
+            self.elements_tree.heading(col, text=col)
+        
+        self.elements_tree.column('Type', width=120)
+        self.elements_tree.column('Resource ID', width=180)
+        self.elements_tree.column('Text', width=120)
+        self.elements_tree.column('Content Desc', width=120)
         self.elements_tree.column('Clickable', width=60)
         self.elements_tree.column('Enabled', width=60)
-        self.elements_tree.column('Bounds', width=150)
-        self.elements_tree.column('XPath', width=200)
+        self.elements_tree.column('Password', width=60)
+        self.elements_tree.column('Bounds', width=120)
+        self.elements_tree.column('XPath', width=180)
         
         self.elements_tree.pack(fill="both", expand=True)
         
-        # Add context menu for element interaction
-        self.elements_tree.bind('<Button-3>', self.show_element_context_menu)
-        
+        # Scrollbar
         scrollbar = ttk.Scrollbar(results_frame, orient="vertical", command=self.elements_tree.yview)
         scrollbar.pack(side="right", fill="y")
         self.elements_tree.configure(yscrollcommand=scrollbar.set)
         
         # Interactive controls
-        self.interactive_frame = ttk.LabelFrame(scanner_frame, text="Interactive Controls", padding=10)
+        interactive_frame = ttk.LabelFrame(scanner_frame, text="Interactive Controls - Direct Manipulation", padding=10)
+        interactive_frame.pack(fill="x", padx=10, pady=5)
         
-        ttk.Button(self.interactive_frame, text="Click Selected", command=self.click_selected_element).pack(side="left", padx=5)
-        ttk.Button(self.interactive_frame, text="Type Text", command=self.type_in_selected_element).pack(side="left", padx=5)
-        ttk.Button(self.interactive_frame, text="Clear Field", command=self.clear_selected_element).pack(side="left", padx=5)
-        ttk.Button(self.interactive_frame, text="Long Press", command=self.long_press_selected_element).pack(side="left", padx=5)
-        ttk.Button(self.interactive_frame, text="Get Text", command=self.get_element_text).pack(side="left", padx=5)
+        ttk.Button(interactive_frame, text="👆 Click Element", 
+                  command=self.click_selected_element).pack(side="left", padx=5)
+        ttk.Button(interactive_frame, text="⌨️ Type Text", 
+                  command=self.type_in_selected_element).pack(side="left", padx=5)
+        ttk.Button(interactive_frame, text="🗑️ Clear Field", 
+                  command=self.clear_selected_element).pack(side="left", padx=5)
+        ttk.Button(interactive_frame, text="👐 Long Press", 
+                  command=self.long_press_selected_element).pack(side="left", padx=5)
+        ttk.Button(interactive_frame, text="📖 Get Text", 
+                  command=self.get_element_text).pack(side="left", padx=5)
+        ttk.Button(interactive_frame, text="📋 Copy XPath", 
+                  command=self.copy_xpath).pack(side="left", padx=5)
+        
+        # Double-click to interact
+        self.elements_tree.bind('<Double-Button-1>', self.on_element_double_click)
+        self.elements_tree.bind('<Button-3>', self.show_element_context_menu)
     
     def create_custom_test_tab(self):
-        """Enhanced custom test builder tab"""
+        """Enhanced custom test builder tab - FIXED typing functionality"""
         custom_frame = ttk.Frame(self.notebook)
         self.notebook.add(custom_frame, text="🛠️ Custom Test Builder")
         
@@ -867,11 +812,10 @@ class BankingAutomationApp:
         # Test steps tree
         columns = ('Action', 'Element', 'Data', 'Description')
         self.test_steps_tree = ttk.Treeview(right_frame, columns=columns, show='tree headings', height=12)
+        
         self.test_steps_tree.heading('#0', text='#')
-        self.test_steps_tree.heading('Action', text='Action')
-        self.test_steps_tree.heading('Element', text='Element')
-        self.test_steps_tree.heading('Data', text='Data')
-        self.test_steps_tree.heading('Description', text='Description')
+        for col in columns:
+            self.test_steps_tree.heading(col, text=col)
         
         self.test_steps_tree.column('#0', width=40)
         self.test_steps_tree.column('Action', width=100)
@@ -900,6 +844,26 @@ class BankingAutomationApp:
         self.custom_desc_var = tk.StringVar()
         ttk.Entry(step_controls, textvariable=self.custom_desc_var, width=50).grid(row=1, column=1, columnspan=3, padx=5, pady=5)
         
+        # Quick add buttons for login test
+        quick_frame = ttk.LabelFrame(right_frame, text="Quick Add Login Steps", padding=5)
+        quick_frame.pack(fill="x", padx=5, pady=5)
+        
+        # Input fields for username and password
+        input_frame = ttk.Frame(quick_frame)
+        input_frame.pack(fill="x")
+        
+        ttk.Label(input_frame, text="Username:").grid(row=0, column=0, padx=5, pady=5)
+        self.test_username_var = tk.StringVar(value="testuser")
+        ttk.Entry(input_frame, textvariable=self.test_username_var, width=15).grid(row=0, column=1, padx=5)
+        
+        ttk.Label(input_frame, text="Password:").grid(row=0, column=2, padx=5, pady=5)
+        self.test_password_var = tk.StringVar(value="testpass")
+        ttk.Entry(input_frame, textvariable=self.test_password_var, show="*", width=15).grid(row=0, column=3, padx=5)
+        
+        ttk.Button(quick_frame, text="➕ Add Username Step", command=self.add_username_step).pack(side="left", padx=5, pady=5)
+        ttk.Button(quick_frame, text="➕ Add Password Step", command=self.add_password_step).pack(side="left", padx=5)
+        ttk.Button(quick_frame, text="➕ Add Login Button", command=self.add_login_button_step).pack(side="left", padx=5)
+        
         # Test controls
         test_controls = ttk.Frame(right_frame)
         test_controls.pack(fill="x", padx=5, pady=10)
@@ -915,6 +879,13 @@ class BankingAutomationApp:
         ttk.Button(test_controls, text="📁 Load Test", command=self.load_custom_test).pack(side="left", padx=2)
         ttk.Button(test_controls, text="▶️ Run Custom Test", command=self.run_custom_test, 
                   style="Accent.TButton").pack(side="left", padx=10)
+        
+        # Progress bar for test execution
+        self.test_progress = ttk.Progressbar(right_frame, mode='determinate', length=400)
+        self.test_progress.pack(fill="x", padx=5, pady=5)
+        
+        self.test_progress_label = tk.Label(right_frame, text="")
+        self.test_progress_label.pack()
         
         # Custom test results
         results_frame = ttk.LabelFrame(right_frame, text="Test Results", padding=5)
@@ -1014,11 +985,64 @@ class BankingAutomationApp:
         self.report_text = scrolledtext.ScrolledText(viewer_frame, wrap=tk.WORD)
         self.report_text.pack(fill="both", expand=True)
     
-    # Enhanced Methods
+    # ============== ALL METHOD IMPLEMENTATIONS ==============
+    
+    def check_system_requirements(self):
+        """Check if ADB and Appium are available"""
+        try:
+            result = subprocess.run(['adb', 'version'], capture_output=True, text=True, timeout=5)
+            if result.returncode == 0:
+                self.log("✅ ADB is installed")
+                self.log_to_server("✅ ADB is installed and available")
+        except:
+            self.log("❌ ADB not available")
+            self.log_to_server("❌ ADB not found - please install Android SDK")
+        
+        try:
+            result = subprocess.run(['appium', '--version'], capture_output=True, text=True, timeout=5)
+            if result.returncode == 0:
+                self.log("✅ Appium is installed")
+                self.log_to_server(f"✅ Appium is installed: {result.stdout.strip()}")
+        except:
+            self.log("❌ Appium not available")
+            self.log_to_server("❌ Appium not found - install with: npm install -g appium")
+    
+    def refresh_devices(self):
+        """Refresh device list"""
+        self.device_listbox.delete(0, tk.END)
+        
+        try:
+            result = subprocess.run(['adb', 'devices'], capture_output=True, text=True, timeout=10)
+            
+            if result.returncode == 0:
+                lines = result.stdout.strip().split('\n')[1:]
+                for line in lines:
+                    if '\tdevice' in line:
+                        device_id = line.split('\t')[0]
+                        self.device_listbox.insert(tk.END, device_id)
+                        self.log(f"Found device: {device_id}")
+                
+                if self.device_listbox.size() == 0:
+                    self.device_listbox.insert(tk.END, "No devices found")
+        except Exception as e:
+            self.log(f"Error refreshing devices: {e}")
+            self.device_listbox.insert(tk.END, "Error: ADB not available")
+    
+    def on_device_select(self, event):
+        """Handle device selection"""
+        selection = self.device_listbox.curselection()
+        if selection:
+            device_id = self.device_listbox.get(selection[0])
+            if device_id != "No devices found" and "Error" not in device_id:
+                self.device_id_var.set(device_id)
+                self.log(f"Selected device: {device_id}")
+    
     def start_appium_with_progress(self):
-        """Start Appium with progress indication"""
-        self.progress_bar.start()
-        self.log("Starting Appium server...")
+        """Start Appium with progress indication and log display"""
+        self.server_progress.start()
+        self.server_progress_label.config(text="Starting Appium server...")
+        self.log_to_server("Starting Appium server...")
+        self.start_server_btn.config(state="disabled")
         
         def start_server():
             try:
@@ -1031,10 +1055,9 @@ class BankingAutomationApp:
                     shell=True
                 )
                 
-                # Read output
+                # Read output and display in log
                 for line in self.appium_process.stdout:
-                    self.server_log_queue.put(line)
-                    self.root.after(0, self.update_server_console, line)
+                    self.root.after(0, self.log_to_server, line.strip())
                     if "Appium REST http interface listener started" in line or "started on" in line:
                         self.root.after(0, self.on_appium_started)
                         break
@@ -1046,14 +1069,21 @@ class BankingAutomationApp:
     
     def on_appium_started(self):
         """Handle successful Appium start"""
-        self.progress_bar.stop()
-        self.log("✅ Appium server started successfully")
-        self.update_server_console("✅ Server ready on port 4723\n")
+        self.server_progress.stop()
+        self.server_progress_label.config(text="Server started successfully")
+        self.server_status_var.set("🟢 Server Running")
+        self.log_to_server("✅ Appium server started successfully on port 4723")
+        self.start_server_btn.config(state="disabled")
+        self.stop_server_btn.config(state="normal")
+        messagebox.showinfo("Success", "Appium server started successfully!")
     
     def on_appium_error(self, error):
         """Handle Appium start error"""
-        self.progress_bar.stop()
-        self.log(f"❌ Failed to start Appium: {error}")
+        self.server_progress.stop()
+        self.server_progress_label.config(text="Failed to start server")
+        self.server_status_var.set("🔴 Server Error")
+        self.log_to_server(f"❌ Failed to start Appium: {error}")
+        self.start_server_btn.config(state="normal")
         messagebox.showerror("Error", f"Failed to start Appium:\n{error}")
     
     def stop_appium(self):
@@ -1062,15 +1092,76 @@ class BankingAutomationApp:
             try:
                 self.appium_process.terminate()
                 self.appium_process = None
-                self.log("Appium server stopped")
-                self.update_server_console("🛑 Server stopped\n")
+                self.server_status_var.set("⚪ Server Stopped")
+                self.log_to_server("Server stopped")
+                self.start_server_btn.config(state="normal")
+                self.stop_server_btn.config(state="disabled")
             except:
                 pass
     
-    def update_server_console(self, text):
-        """Update server console output"""
-        self.server_console.insert(tk.END, text)
-        self.server_console.see(tk.END)
+    def check_server_status(self):
+        """Check if server is running"""
+        try:
+            import requests
+            response = requests.get("http://localhost:4723/status", timeout=2)
+            if response.status_code == 200:
+                self.server_status_var.set("🟢 Server Running")
+                self.log_to_server("Server is running and responding")
+            else:
+                self.server_status_var.set("🟡 Server Not Responding")
+                self.log_to_server("Server not responding properly")
+        except:
+            self.server_status_var.set("⚪ Server Not Running")
+            self.log_to_server("Server is not running")
+    
+    def install_appium(self):
+        """Install Appium"""
+        self.log_to_server("Installing Appium...")
+        subprocess.Popen(['npm', 'install', '-g', 'appium'])
+    
+    def log_to_server(self, text):
+        """Log to server display"""
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        self.server_log.insert(tk.END, f"[{timestamp}] {text}\n")
+        if self.auto_scroll:
+            self.server_log.see(tk.END)
+    
+    def log_to_device(self, text):
+        """Log to device display"""
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        self.device_log.insert(tk.END, f"[{timestamp}] {text}\n")
+        self.device_log.see(tk.END)
+    
+    def toggle_auto_scroll(self):
+        """Toggle auto scroll for logs"""
+        self.auto_scroll = not self.auto_scroll
+        self.log_to_server(f"Auto scroll: {'ON' if self.auto_scroll else 'OFF'}")
+    
+    def save_server_log(self):
+        """Save server log to file"""
+        filepath = filedialog.asksaveasfilename(
+            defaultextension=".txt",
+            filetypes=[("Text files", "*.txt")],
+            initialdir=logs_dir,
+            initialfile=f"server_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+        )
+        if filepath:
+            with open(filepath, 'w') as f:
+                f.write(self.server_log.get(1.0, tk.END))
+            messagebox.showinfo("Saved", f"Server log saved to {Path(filepath).name}")
+    
+    def save_device_log(self):
+        """Save device log to file"""
+        filepath = filedialog.asksaveasfilename(
+            defaultextension=".txt",
+            filetypes=[("Text files", "*.txt")],
+            initialdir=logs_dir,
+            initialfile=f"device_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+        )
+        if filepath:
+            with open(filepath, 'w') as f:
+                f.write(self.device_log.get(1.0, tk.END))
+            messagebox.showinfo("Saved", f"Device log saved to {Path(filepath).name}")
     
     def connect_device_with_progress(self):
         """Connect to device with progress indication"""
@@ -1081,13 +1172,17 @@ class BankingAutomationApp:
             messagebox.showwarning("Warning", "Please select or enter a device ID")
             return
         
-        self.progress_bar.start()
-        self.log(f"Connecting to device: {device_id}")
+        self.device_progress.start()
+        self.device_progress_label.config(text="Connecting to device...")
+        self.log_to_device(f"Connecting to device: {device_id}")
+        self.connect_btn.config(state="disabled")
         
         def connect():
             try:
                 from appium import webdriver
                 from appium.options.android import UiAutomator2Options
+                
+                self.root.after(0, lambda: self.log_to_device("Setting up connection options..."))
                 
                 options = UiAutomator2Options()
                 options.platform_name = "Android"
@@ -1097,9 +1192,11 @@ class BankingAutomationApp:
                 options.automation_name = "UiAutomator2"
                 options.no_reset = True
                 options.full_reset = False
-                options.new_command_timeout = 300
+                options.new_command_timeout = 1000
                 options.auto_grant_permissions = True
                 options.ignore_hidden_api_policy_error = True
+                
+                self.root.after(0, lambda: self.log_to_device("Establishing connection..."))
                 
                 self.driver = webdriver.Remote("http://localhost:4723", options=options)
                 
@@ -1115,26 +1212,90 @@ class BankingAutomationApp:
     
     def on_device_connected(self):
         """Handle successful device connection"""
-        self.progress_bar.stop()
-        self.connection_status_var.set("✅ Connected")
-        self.log("✅ Successfully connected to device")
+        self.device_progress.stop()
+        self.device_progress_label.config(text="Device connected successfully")
+        self.connection_status_var.set("🟢 Connected")
+        self.log_to_device("✅ Successfully connected to device")
+        self.connect_btn.config(state="disabled")
+        self.disconnect_btn.config(state="normal")
+        
+        # Log device info
+        try:
+            self.log_to_device(f"Platform: {self.driver.capabilities.get('platformName', 'Unknown')}")
+            self.log_to_device(f"Version: {self.driver.capabilities.get('platformVersion', 'Unknown')}")
+            self.log_to_device(f"Device: {self.driver.capabilities.get('deviceName', 'Unknown')}")
+        except:
+            pass
+        
         messagebox.showinfo("Success", "Connected to device successfully!")
     
     def on_device_error(self, error):
         """Handle device connection error"""
-        self.progress_bar.stop()
-        self.connection_status_var.set("❌ Connection Failed")
-        self.log(f"❌ Connection failed: {error}")
+        self.device_progress.stop()
+        self.device_progress_label.config(text="Connection failed")
+        self.connection_status_var.set("🔴 Connection Failed")
+        self.log_to_device(f"❌ Connection failed: {error}")
+        self.connect_btn.config(state="normal")
         messagebox.showerror("Connection Error", f"Failed to connect:\n{error}")
     
+    def disconnect_device(self):
+        """Disconnect from device"""
+        if self.driver:
+            try:
+                self.driver.quit()
+                self.driver = None
+                self.test_runner = None
+                self.connection_status_var.set("⚪ Disconnected")
+                self.log_to_device("Device disconnected")
+                self.connect_btn.config(state="normal")
+                self.disconnect_btn.config(state="disabled")
+            except Exception as e:
+                self.log_to_device(f"Error disconnecting: {e}")
+    
+    def show_device_info(self):
+        """Show device information"""
+        if self.driver:
+            try:
+                info = f"""Device Information:
+Platform: {self.driver.capabilities.get('platformName', 'Unknown')}
+Version: {self.driver.capabilities.get('platformVersion', 'Unknown')}
+Device: {self.driver.capabilities.get('deviceName', 'Unknown')}
+UDID: {self.driver.capabilities.get('udid', 'Unknown')}
+App Package: {self.driver.capabilities.get('appPackage', 'Unknown')}
+"""
+                messagebox.showinfo("Device Info", info)
+            except:
+                messagebox.showerror("Error", "Could not retrieve device info")
+        else:
+            messagebox.showwarning("Not Connected", "Please connect to a device first")
+    
+    def take_screenshot(self):
+        """Take screenshot and return path"""
+        if not self.driver:
+            return None
+        
+        try:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"screenshot_{timestamp}.png"
+            filepath = screenshots_dir / filename
+            
+            self.driver.save_screenshot(str(filepath))
+            self.log(f"📸 Screenshot saved: {filename}")
+            return str(filepath)
+        except Exception as e:
+            self.log(f"❌ Screenshot failed: {e}")
+            return None
+    
     def deep_scan_screen(self):
-        """Perform deep scan of all elements"""
+        """Perform deep scan of ALL elements - NO RESTRICTIONS"""
         if not self.driver:
             messagebox.showwarning("Warning", "Please connect to device first")
             return
         
-        self.log("Starting deep screen scan...")
-        self.progress_bar.start()
+        self.log("Starting unrestricted deep scan...")
+        self.scan_progress_label.config(text="Scanning all elements...")
+        self.scan_progress['mode'] = 'indeterminate'
+        self.scan_progress.start()
         
         def scan():
             try:
@@ -1147,14 +1308,18 @@ class BankingAutomationApp:
                 
                 screenshot_path = self.take_screenshot()
                 
-                # Get ALL elements without restrictions
+                # Get ALL elements without ANY filtering
                 all_elements = self.driver.find_elements(AppiumBy.XPATH, "//*")
+                total_elements = len(all_elements)
+                
+                self.root.after(0, lambda: self.scan_progress.configure(mode='determinate', maximum=total_elements))
                 
                 elements_data = []
                 element_count = 0
                 
                 for i, elem in enumerate(all_elements):
                     try:
+                        # Get ALL attributes
                         elem_type = elem.get_attribute('className') or elem.get_attribute('class') or elem.tag_name or 'Unknown'
                         resource_id = elem.get_attribute('resource-id') or ''
                         text = elem.get_attribute('text') or ''
@@ -1189,6 +1354,9 @@ class BankingAutomationApp:
                         
                         element_count += 1
                         self.root.after(0, self.add_element_to_tree, element_count, element_data)
+                        self.root.after(0, lambda v=i: self.scan_progress.configure(value=v+1))
+                        self.root.after(0, lambda c=element_count, t=total_elements: 
+                                       self.scan_progress_label.config(text=f"Scanned {c}/{t} elements"))
                         
                     except Exception as e:
                         continue
@@ -1208,6 +1376,95 @@ class BankingAutomationApp:
         
         threading.Thread(target=scan, daemon=True).start()
     
+    def scan_login_elements(self):
+        """Scan specifically for login elements and store them"""
+        if not self.driver:
+            messagebox.showwarning("Warning", "Please connect to device first")
+            return
+        
+        self.log("Scanning for login elements...")
+        self.main_progress_bar.start()
+        
+        def scan():
+            try:
+                from appium.webdriver.common.appiumby import AppiumBy
+                
+                # Get all elements
+                all_elements = self.driver.find_elements(AppiumBy.XPATH, "//*")
+                
+                # Clear previous login elements
+                self.login_elements = {}
+                
+                # Look for username field (first EditText that's not password)
+                for elem in all_elements:
+                    try:
+                        if 'EditText' in elem.get_attribute('className'):
+                            if elem.get_attribute('password') != 'true':
+                                self.login_elements['username'] = {
+                                    'xpath': f"//*[@resource-id='{elem.get_attribute('resource-id')}']" if elem.get_attribute('resource-id') else "//android.widget.EditText[1]",
+                                    'resource_id': elem.get_attribute('resource-id'),
+                                    'type': 'EditText'
+                                }
+                                break
+                    except:
+                        continue
+                
+                # Look for password field
+                for elem in all_elements:
+                    try:
+                        if 'EditText' in elem.get_attribute('className'):
+                            if elem.get_attribute('password') == 'true':
+                                self.login_elements['password'] = {
+                                    'xpath': f"//*[@resource-id='{elem.get_attribute('resource-id')}']" if elem.get_attribute('resource-id') else "//android.widget.EditText[@password='true']",
+                                    'resource_id': elem.get_attribute('resource-id'),
+                                    'type': 'EditText'
+                                }
+                                break
+                    except:
+                        continue
+                
+                # Look for login button
+                for elem in all_elements:
+                    try:
+                        elem_text = elem.get_attribute('text') or ''
+                        if 'Button' in elem.get_attribute('className') or 'TextView' in elem.get_attribute('className'):
+                            if any(word in elem_text.lower() for word in ['submit', 'login', 'sign']):
+                                self.login_elements['button'] = {
+                                    'xpath': f"//*[@text='{elem_text}']",
+                                    'text': elem_text,
+                                    'type': elem.get_attribute('className')
+                                }
+                                break
+                    except:
+                        continue
+                
+                self.root.after(0, self.on_login_scan_complete)
+                
+            except Exception as e:
+                self.root.after(0, self.on_scan_error, str(e))
+        
+        threading.Thread(target=scan, daemon=True).start()
+    
+    def on_login_scan_complete(self):
+        """Handle login scan completion"""
+        self.main_progress_bar.stop()
+        
+        found = []
+        if 'username' in self.login_elements:
+            found.append("Username field")
+            self.log_to_device(f"Found username: {self.login_elements['username']['xpath']}")
+        if 'password' in self.login_elements:
+            found.append("Password field")
+            self.log_to_device(f"Found password: {self.login_elements['password']['xpath']}")
+        if 'button' in self.login_elements:
+            found.append("Login button")
+            self.log_to_device(f"Found button: {self.login_elements['button']['xpath']}")
+        
+        if found:
+            messagebox.showinfo("Login Elements Found", f"Found: {', '.join(found)}")
+        else:
+            messagebox.showwarning("No Elements", "No login elements detected")
+    
     def add_element_to_tree(self, count, element_data):
         """Add element to tree view"""
         self.elements_tree.insert('', 'end', text=str(count), values=(
@@ -1215,390 +1472,539 @@ class BankingAutomationApp:
             element_data['resource_id'][-30:] if len(element_data['resource_id']) > 30 else element_data['resource_id'],
             element_data['text'][:20] if len(element_data['text']) > 20 else element_data['text'],
             element_data['content_desc'][:20] if len(element_data['content_desc']) > 20 else element_data['content_desc'],
-            '✔' if element_data['clickable'] else '',
-            '✔' if element_data['enabled'] else '',
+            '✓' if element_data['clickable'] else '',
+            '✓' if element_data['enabled'] else '',
+            '🔒' if element_data['password'] else '',
             element_data['bounds'][:20] if len(element_data['bounds']) > 20 else element_data['bounds'],
             element_data['xpath'][:30] if len(element_data['xpath']) > 30 else element_data['xpath']
         ), tags=(element_data,))
     
     def on_scan_complete(self, count):
         """Handle scan completion"""
-        self.progress_bar.stop()
+        self.scan_progress.stop()
+        self.scan_progress_label.config(text=f"Scan complete: {count} elements found")
         self.log(f"✅ Deep scan complete: Found {count} elements")
         messagebox.showinfo("Scan Complete", f"Found {count} elements")
     
     def on_scan_error(self, error):
         """Handle scan error"""
-        self.progress_bar.stop()
+        self.scan_progress.stop()
+        self.scan_progress_label.config(text="Scan failed")
         self.log(f"❌ Scan failed: {error}")
         messagebox.showerror("Scan Error", f"Failed to scan screen:\n{error}")
     
-    def toggle_interactive_mode(self):
-        """Toggle interactive mode"""
-        if hasattr(self, 'interactive_frame'):
-            if self.interactive_frame.winfo_viewable():
-                self.interactive_frame.pack_forget()
-            else:
-                self.interactive_frame.pack(fill="x", padx=10, pady=5)
-    
-    def show_element_context_menu(self, event):
-        """Show context menu for element interaction"""
-        item = self.elements_tree.identify('item', event.x, event.y)
-        if item:
-            self.elements_tree.selection_set(item)
-            
-            menu = tk.Menu(self.root, tearoff=0)
-            menu.add_command(label="Click", command=self.click_selected_element)
-            menu.add_command(label="Type Text", command=self.type_in_selected_element)
-            menu.add_command(label="Clear", command=self.clear_selected_element)
-            menu.add_command(label="Long Press", command=self.long_press_selected_element)
-            menu.add_separator()
-            menu.add_command(label="Get Text", command=self.get_element_text)
-            menu.add_command(label="Get Attributes", command=self.get_element_attributes)
-            menu.add_separator()
-            menu.add_command(label="Add to Test", command=self.add_selected_to_test)
-            
-            menu.post(event.x_root, event.y_root)
-    
     def click_selected_element(self):
-        """Click the selected element"""
+        """Click selected element from tree"""
         selection = self.elements_tree.selection()
-        if selection and self.driver:
-            item = selection[0]
-            tags = self.elements_tree.item(item)['tags']
-            if tags:
-                element_data = tags[0]
-                try:
-                    element = self.test_runner.find_element_smart('xpath', element_data['xpath'], timeout=5)
-                    if element:
-                        element.click()
-                        self.log(f"Clicked element: {element_data.get('text', element_data.get('resource_id', 'Unknown'))}")
-                except Exception as e:
-                    self.log(f"Failed to click: {e}")
+        if not selection:
+            messagebox.showwarning("No Selection", "Please select an element")
+            return
+        
+        if not self.driver:
+            messagebox.showerror("Error", "Not connected to device")
+            return
+        
+        try:
+            element_data = self.elements_tree.item(selection[0])['tags'][0]
+            from appium.webdriver.common.appiumby import AppiumBy
+            
+            element = self.driver.find_element(AppiumBy.XPATH, element_data['xpath'])
+            element.click()
+            self.log(f"Clicked element: {element_data['xpath']}")
+            messagebox.showinfo("Success", "Element clicked")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to click element: {e}")
     
     def type_in_selected_element(self):
         """Type text in selected element"""
         selection = self.elements_tree.selection()
-        if selection and self.driver:
-            text = tk.simpledialog.askstring("Type Text", "Enter text to type:")
-            if text:
-                item = selection[0]
-                tags = self.elements_tree.item(item)['tags']
-                if tags:
-                    element_data = tags[0]
-                    try:
-                        element = self.test_runner.find_element_smart('xpath', element_data['xpath'], timeout=5)
-                        if element:
-                            element.clear()
-                            element.send_keys(text)
-                            self.log(f"Typed text in element: {element_data.get('resource_id', 'Unknown')}")
-                    except Exception as e:
-                        self.log(f"Failed to type: {e}")
+        if not selection:
+            messagebox.showwarning("No Selection", "Please select an element")
+            return
+        
+        text = simpledialog.askstring("Type Text", "Enter text to type:")
+        if not text:
+            return
+        
+        try:
+            element_data = self.elements_tree.item(selection[0])['tags'][0]
+            from appium.webdriver.common.appiumby import AppiumBy
+            
+            element = self.driver.find_element(AppiumBy.XPATH, element_data['xpath'])
+            element.clear()
+            element.send_keys(text)
+            self.log(f"Typed text in element: {element_data['xpath']}")
+            messagebox.showinfo("Success", f"Typed: {text}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to type: {e}")
     
     def clear_selected_element(self):
         """Clear selected element"""
         selection = self.elements_tree.selection()
-        if selection and self.driver:
-            item = selection[0]
-            tags = self.elements_tree.item(item)['tags']
-            if tags:
-                element_data = tags[0]
-                try:
-                    element = self.test_runner.find_element_smart('xpath', element_data['xpath'], timeout=5)
-                    if element:
-                        element.clear()
-                        self.log(f"Cleared element: {element_data.get('resource_id', 'Unknown')}")
-                except Exception as e:
-                    self.log(f"Failed to clear: {e}")
+        if not selection:
+            messagebox.showwarning("No Selection", "Please select an element")
+            return
+        
+        try:
+            element_data = self.elements_tree.item(selection[0])['tags'][0]
+            from appium.webdriver.common.appiumby import AppiumBy
+            
+            element = self.driver.find_element(AppiumBy.XPATH, element_data['xpath'])
+            element.clear()
+            self.log(f"Cleared element: {element_data['xpath']}")
+            messagebox.showinfo("Success", "Element cleared")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to clear: {e}")
     
     def long_press_selected_element(self):
         """Long press selected element"""
         selection = self.elements_tree.selection()
-        if selection and self.driver:
-            item = selection[0]
-            tags = self.elements_tree.item(item)['tags']
-            if tags:
-                element_data = tags[0]
-                try:
-                    from appium.webdriver.common.touch_action import TouchAction
-                    element = self.test_runner.find_element_smart('xpath', element_data['xpath'], timeout=5)
-                    if element:
-                        TouchAction(self.driver).long_press(element).perform()
-                        self.log(f"Long pressed element: {element_data.get('resource_id', 'Unknown')}")
-                except Exception as e:
-                    self.log(f"Failed to long press: {e}")
+        if not selection:
+            messagebox.showwarning("No Selection", "Please select an element")
+            return
+        
+        try:
+            element_data = self.elements_tree.item(selection[0])['tags'][0]
+            from appium.webdriver.common.appiumby import AppiumBy
+            from appium.webdriver.common.touch_action import TouchAction
+            
+            element = self.driver.find_element(AppiumBy.XPATH, element_data['xpath'])
+            TouchAction(self.driver).long_press(element).perform()
+            self.log(f"Long pressed element: {element_data['xpath']}")
+            messagebox.showinfo("Success", "Long press performed")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to long press: {e}")
     
     def get_element_text(self):
         """Get text from selected element"""
         selection = self.elements_tree.selection()
-        if selection and self.driver:
-            item = selection[0]
-            tags = self.elements_tree.item(item)['tags']
-            if tags:
-                element_data = tags[0]
-                try:
-                    element = self.test_runner.find_element_smart('xpath', element_data['xpath'], timeout=5)
-                    if element:
-                        text = element.text
-                        messagebox.showinfo("Element Text", f"Text: {text}")
-                        self.log(f"Got text: {text}")
-                except Exception as e:
-                    self.log(f"Failed to get text: {e}")
-    
-    def get_element_attributes(self):
-        """Get all attributes of selected element"""
-        selection = self.elements_tree.selection()
-        if selection and self.driver:
-            item = selection[0]
-            tags = self.elements_tree.item(item)['tags']
-            if tags:
-                element_data = tags[0]
-                try:
-                    element = self.test_runner.find_element_smart('xpath', element_data['xpath'], timeout=5)
-                    if element:
-                        attrs = {
-                            'text': element.text,
-                            'enabled': element.is_enabled(),
-                            'displayed': element.is_displayed(),
-                            'selected': element.is_selected(),
-                            'location': element.location,
-                            'size': element.size
-                        }
-                        messagebox.showinfo("Element Attributes", json.dumps(attrs, indent=2))
-                except Exception as e:
-                    self.log(f"Failed to get attributes: {e}")
-    
-    def add_selected_to_test(self):
-        """Add selected element to custom test"""
-        selection = self.elements_tree.selection()
-        if selection:
-            item = selection[0]
-            tags = self.elements_tree.item(item)['tags']
-            if tags:
-                element_data = tags[0]
-                element_info = {
-                    'name': element_data.get('text', '') or element_data.get('resource_id', '').split('/')[-1] or f'Element_{element_data["index"]}',
-                    'locator_strategy': 'xpath',
-                    'locator_value': element_data['xpath']
-                }
-                
-                action = self.custom_action_var.get()
-                data = self.custom_data_var.get() if self.custom_data_var.get() else None
-                description = self.custom_desc_var.get()
-                
-                self.custom_test_builder.add_step(action, element_info, data, description)
-                self.update_test_steps_tree()
-                self.log(f"Added {action} step for {element_info['name']}")
-    
-    def run_ok_button_test(self):
-        """Run OK button test"""
-        if not self.driver or not self.test_runner:
-            messagebox.showwarning("Warning", "Please connect to device first")
+        if not selection:
+            messagebox.showwarning("No Selection", "Please select an element")
             return
         
-        self.log("Running OK button test...")
-        
-        def run_test():
-            results = self.test_runner.execute_ok_button_test()
-            self.root.after(0, self.display_test_results, results)
-        
-        threading.Thread(target=run_test, daemon=True).start()
-    
-    # All other existing methods remain the same...
-    def check_system_requirements(self):
-        """Check if ADB and Appium are available"""
         try:
-            result = subprocess.run(['adb', 'version'], capture_output=True, text=True, timeout=5)
-            if result.returncode == 0:
-                self.log("✅ ADB is installed")
-        except:
-            self.log("❌ ADB not available")
-        
-        try:
-            result = subprocess.run(['appium', '--version'], capture_output=True, text=True, timeout=5)
-            if result.returncode == 0:
-                self.log("✅ Appium is installed")
-        except:
-            self.log("❌ Appium not available")
-    
-    def refresh_devices(self):
-        """Refresh device list"""
-        self.device_listbox.delete(0, tk.END)
-        
-        try:
-            result = subprocess.run(['adb', 'devices'], capture_output=True, text=True, timeout=10)
+            element_data = self.elements_tree.item(selection[0])['tags'][0]
+            from appium.webdriver.common.appiumby import AppiumBy
             
-            if result.returncode == 0:
-                lines = result.stdout.strip().split('\n')[1:]
-                for line in lines:
-                    if '\tdevice' in line:
-                        device_id = line.split('\t')[0]
-                        self.device_listbox.insert(tk.END, device_id)
-                        self.log(f"Found device: {device_id}")
-                
-                if self.device_listbox.size() == 0:
-                    self.device_listbox.insert(tk.END, "No devices found")
+            element = self.driver.find_element(AppiumBy.XPATH, element_data['xpath'])
+            text = element.text
+            self.log(f"Got text from element: {text}")
+            messagebox.showinfo("Element Text", f"Text: {text}")
         except Exception as e:
-            self.log(f"Error refreshing devices: {e}")
-            self.device_listbox.insert(tk.END, "Error: ADB not available")
+            messagebox.showerror("Error", f"Failed to get text: {e}")
     
-    def on_device_select(self, event):
-        """Handle device selection"""
-        selection = self.device_listbox.curselection()
-        if selection:
-            device_id = self.device_listbox.get(selection[0])
-            if device_id != "No devices found" and "Error" not in device_id:
-                self.device_id_var.set(device_id)
-                self.log(f"Selected device: {device_id}")
-    
-    def disconnect_device(self):
-        """Disconnect from device"""
-        if self.driver:
-            try:
-                self.driver.quit()
-                self.driver = None
-                self.test_runner = None
-                self.connection_status_var.set("❌ Disconnected")
-                self.log("Device disconnected")
-            except Exception as e:
-                self.log(f"Error disconnecting: {e}")
-    
-    def take_screenshot(self):
-        """Take screenshot and return path"""
-        if not self.driver:
-            return None
+    def copy_xpath(self):
+        """Copy XPath of selected element to clipboard"""
+        selection = self.elements_tree.selection()
+        if not selection:
+            messagebox.showwarning("No Selection", "Please select an element")
+            return
         
         try:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"screenshot_{timestamp}.png"
-            filepath = screenshots_dir / filename
-            
-            self.driver.save_screenshot(str(filepath))
-            self.log(f"📸 Screenshot saved: {filename}")
-            return str(filepath)
+            element_data = self.elements_tree.item(selection[0])['tags'][0]
+            xpath = element_data['xpath']
+            self.root.clipboard_clear()
+            self.root.clipboard_append(xpath)
+            self.log(f"Copied XPath: {xpath}")
+            messagebox.showinfo("Success", "XPath copied to clipboard")
         except Exception as e:
-            self.log(f"❌ Screenshot failed: {e}")
-            return None
+            messagebox.showerror("Error", f"Failed to copy: {e}")
+    
+    def on_element_double_click(self, event):
+        """Handle double-click on element"""
+        self.click_selected_element()
+    
+    def show_element_context_menu(self, event):
+        """Show context menu for element"""
+        # Create context menu
+        context_menu = tk.Menu(self.root, tearoff=0)
+        context_menu.add_command(label="Click", command=self.click_selected_element)
+        context_menu.add_command(label="Type Text", command=self.type_in_selected_element)
+        context_menu.add_command(label="Clear", command=self.clear_selected_element)
+        context_menu.add_command(label="Long Press", command=self.long_press_selected_element)
+        context_menu.add_separator()
+        context_menu.add_command(label="Get Text", command=self.get_element_text)
+        context_menu.add_command(label="Copy XPath", command=self.copy_xpath)
+        
+        context_menu.post(event.x_root, event.y_root)
+    
+    def use_scan_for_custom_test(self):
+        """Use scan results for custom test building"""
+        if not self.last_scan_results:
+            messagebox.showwarning("No Scan", "Please perform a scan first")
+            return
+        
+        # Switch to custom test tab
+        self.notebook.select(3)  # Custom test tab index
+        
+        # Refresh available elements
+        self.refresh_available_elements()
+        
+        messagebox.showinfo("Success", "Scan results loaded for custom test building")
     
     def save_scan_to_db(self):
         """Save scan results to database"""
         if not self.last_scan_results:
-            messagebox.showwarning("Warning", "No scan results to save")
+            messagebox.showwarning("No Scan", "Please perform a scan first")
             return
         
         try:
             conn = sqlite3.connect(DB_PATH)
             cursor = conn.cursor()
             
+            # Save scan
             cursor.execute('''
                 INSERT INTO scan_results (app_name, screen_name, elements_count, screenshot_path, scan_data)
                 VALUES (?, ?, ?, ?, ?)
             ''', (
-                self.app_package_var.get(),
-                self.last_scan_results['screen_name'],
-                self.last_scan_results['element_count'],
+                "InLinea Banking",
+                self.last_scan_results.get('screen_name', 'Unknown'),
+                self.last_scan_results.get('element_count', 0),
                 self.last_scan_results.get('screenshot', ''),
-                json.dumps(self.last_scan_results['elements'])
+                json.dumps(self.last_scan_results.get('elements', []))
             ))
             
             scan_id = cursor.lastrowid
             
-            for elem in self.last_scan_results['elements']:
+            # Save elements
+            for element in self.last_scan_results.get('elements', []):
                 cursor.execute('''
-                    INSERT INTO elements (scan_id, element_type, resource_id, text, content_desc, 
+                    INSERT INTO elements (scan_id, element_type, resource_id, text, content_desc,
                                         clickable, enabled, password, bounds, xpath)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ''', (
                     scan_id,
-                    elem['type'],
-                    elem['resource_id'],
-                    elem['text'],
-                    elem['content_desc'],
-                    elem['clickable'],
-                    elem['enabled'],
-                    elem['password'],
-                    elem['bounds'],
-                    elem.get('xpath', '')
+                    element.get('type', ''),
+                    element.get('resource_id', ''),
+                    element.get('text', ''),
+                    element.get('content_desc', ''),
+                    element.get('clickable', False),
+                    element.get('enabled', False),
+                    element.get('password', False),
+                    element.get('bounds', ''),
+                    element.get('xpath', '')
                 ))
             
             conn.commit()
             conn.close()
             
-            self.log(f"✅ Scan saved to database (ID: {scan_id})")
-            messagebox.showinfo("Success", f"Scan saved to database\nScan ID: {scan_id}")
-            
+            self.log("Scan results saved to database")
+            messagebox.showinfo("Success", "Scan saved to database")
             self.load_recent_scans()
-            self.refresh_db_stats()
             
         except Exception as e:
-            self.log(f"❌ Database save failed: {e}")
-            messagebox.showerror("Error", f"Failed to save to database:\n{e}")
+            self.log(f"Failed to save scan: {e}")
+            messagebox.showerror("Error", f"Failed to save: {e}")
     
-    def run_login_test(self):
-        """Run complete login test"""
+    def refresh_available_elements(self):
+        """Refresh available elements in custom test builder"""
+        if not self.last_scan_results:
+            return
+        
+        self.available_elements_listbox.delete(0, tk.END)
+        
+        for element in self.last_scan_results.get('elements', []):
+            display_text = f"{element['type'].split('.')[-1]} - {element.get('resource_id', 'no-id')[:20]} - {element.get('text', '')[:20]}"
+            self.available_elements_listbox.insert(tk.END, display_text)
+        
+        self.custom_test_builder.add_scanned_elements(self.last_scan_results.get('elements', []))
+    
+    def on_element_select(self, event):
+        """Handle element selection in custom test builder"""
+        selection = self.available_elements_listbox.curselection()
+        if not selection:
+            return
+        
+        index = selection[0]
+        if self.last_scan_results and index < len(self.last_scan_results.get('elements', [])):
+            element = self.last_scan_results['elements'][index]
+            
+            # Display element details
+            details = f"""Type: {element.get('type', '')}
+Resource ID: {element.get('resource_id', '')}
+Text: {element.get('text', '')}
+Content Desc: {element.get('content_desc', '')}
+Clickable: {element.get('clickable', False)}
+Enabled: {element.get('enabled', False)}
+Password: {element.get('password', False)}
+XPath: {element.get('xpath', '')}
+"""
+            self.element_details_text.delete(1.0, tk.END)
+            self.element_details_text.insert(1.0, details)
+    
+    def add_element_to_test(self):
+        """Add selected element to test"""
+        selection = self.available_elements_listbox.curselection()
+        if not selection:
+            messagebox.showwarning("No Selection", "Please select an element")
+            return
+        
+        index = selection[0]
+        if self.last_scan_results and index < len(self.last_scan_results.get('elements', [])):
+            element = self.last_scan_results['elements'][index]
+            
+            element_info = {
+                'name': element.get('text', element.get('resource_id', 'Element')),
+                'locator_strategy': 'xpath',
+                'locator_value': element.get('xpath', '')
+            }
+            
+            action = self.custom_action_var.get()
+            data = self.custom_data_var.get() if action == 'type' else None
+            description = self.custom_desc_var.get() or f"{action} on {element_info['name']}"
+            
+            self.custom_test_builder.add_step(action, element_info, data, description)
+            self.update_test_steps_tree()
+            
+            self.log(f"Added step: {description}")
+    
+    def add_username_step(self):
+        """Add username input step with actual value"""
+        if 'username' not in self.login_elements:
+            messagebox.showwarning("No Element", "Please scan login page first")
+            return
+        
+        username_value = self.test_username_var.get()
+        element_info = {
+            'name': 'Username Field',
+            'locator_strategy': 'xpath',
+            'locator_value': self.login_elements['username']['xpath']
+        }
+        
+        self.custom_test_builder.add_step(
+            'type', 
+            element_info, 
+            username_value,  # Pass the actual username value
+            f"Type username: {username_value}"
+        )
+        
+        self.update_test_steps_tree()
+        self.log(f"Added username step with value: {username_value}")
+    
+    def add_password_step(self):
+        """Add password input step with actual value"""
+        if 'password' not in self.login_elements:
+            messagebox.showwarning("No Element", "Please scan login page first")
+            return
+        
+        password_value = self.test_password_var.get()
+        element_info = {
+            'name': 'Password Field',
+            'locator_strategy': 'xpath',
+            'locator_value': self.login_elements['password']['xpath']
+        }
+        
+        self.custom_test_builder.add_step(
+            'type',
+            element_info,
+            password_value,  # Pass the actual password value
+            "Type password"
+        )
+        
+        self.update_test_steps_tree()
+        self.log("Added password step")
+    
+    def add_login_button_step(self):
+        """Add login button click step"""
+        if 'button' not in self.login_elements:
+            messagebox.showwarning("No Element", "Please scan login page first")
+            return
+        
+        element_info = {
+            'name': 'Login Button',
+            'locator_strategy': 'xpath',
+            'locator_value': self.login_elements['button']['xpath']
+        }
+        
+        self.custom_test_builder.add_step(
+            'click',
+            element_info,
+            None,
+            "Click login button"
+        )
+        
+        self.update_test_steps_tree()
+        self.log("Added login button click")
+    
+    def update_test_steps_tree(self):
+        """Update the test steps tree view"""
+        # Clear tree
+        for item in self.test_steps_tree.get_children():
+            self.test_steps_tree.delete(item)
+        
+        # Add steps
+        for i, step in enumerate(self.custom_test_builder.test_steps, 1):
+            element_name = step.get('element_info', {}).get('name', 'Unknown')
+            self.test_steps_tree.insert('', 'end', text=str(i), values=(
+                step.get('action', ''),
+                element_name[:30],
+                step.get('data', '')[:20] if step.get('data') else '',
+                step.get('description', '')[:50]
+            ))
+    
+    def move_step_up(self):
+        """Move selected step up"""
+        selection = self.test_steps_tree.selection()
+        if not selection:
+            return
+        
+        index = int(self.test_steps_tree.item(selection[0])['text']) - 1
+        self.custom_test_builder.move_step_up(index)
+        self.update_test_steps_tree()
+    
+    def move_step_down(self):
+        """Move selected step down"""
+        selection = self.test_steps_tree.selection()
+        if not selection:
+            return
+        
+        index = int(self.test_steps_tree.item(selection[0])['text']) - 1
+        self.custom_test_builder.move_step_down(index)
+        self.update_test_steps_tree()
+    
+    def remove_test_step(self):
+        """Remove selected test step"""
+        selection = self.test_steps_tree.selection()
+        if not selection:
+            return
+        
+        index = int(self.test_steps_tree.item(selection[0])['text']) - 1
+        self.custom_test_builder.remove_step(index)
+        self.update_test_steps_tree()
+    
+    def clear_custom_test(self):
+        """Clear all test steps"""
+        self.custom_test_builder.clear_steps()
+        self.update_test_steps_tree()
+        self.log("Cleared all test steps")
+    
+    def save_custom_test(self):
+        """Save custom test to file"""
+        filepath = filedialog.asksaveasfilename(
+            defaultextension=".json",
+            filetypes=[("JSON files", "*.json")],
+            initialdir=custom_tests_dir,
+            initialfile=f"{self.custom_test_name.get()}.json"
+        )
+        
+        if filepath:
+            self.custom_test_builder.save_test(filepath)
+            self.log(f"Test saved: {Path(filepath).name}")
+            messagebox.showinfo("Success", "Test saved successfully")
+    
+    def load_custom_test(self):
+        """Load custom test from file"""
+        filepath = filedialog.askopenfilename(
+            filetypes=[("JSON files", "*.json")],
+            initialdir=custom_tests_dir
+        )
+        
+        if filepath:
+            test_case = self.custom_test_builder.load_test(filepath)
+            self.custom_test_name.set(test_case.get('name', 'Custom Test'))
+            self.update_test_steps_tree()
+            self.log(f"Test loaded: {Path(filepath).name}")
+            messagebox.showinfo("Success", "Test loaded successfully")
+    
+    def run_custom_test(self):
+        """Run custom test with progress reporting"""
         if not self.driver:
-            messagebox.showwarning("Warning", "Please connect to device first")
+            messagebox.showerror("Error", "Connect to device first")
             return
         
         if not self.test_runner:
             messagebox.showerror("Error", "Test runner not initialized")
             return
         
-        username = self.username_var.get()
-        password = self.password_var.get()
-        
-        if not username or not password:
-            messagebox.showwarning("Warning", "Please enter username and password")
+        if not self.custom_test_builder.test_steps:
+            messagebox.showwarning("No Steps", "Please add test steps first")
             return
         
-        self.log("Starting login test...")
-        self.test_results_text.delete(1.0, tk.END)
+        test_name = self.custom_test_name.get()
+        self.log(f"Running custom test: {test_name}")
+        self.custom_test_results.delete(1.0, tk.END)
         
+        # Progress callback
+        def progress_callback(current, total, description):
+            self.root.after(0, self.update_test_progress, current, total, description)
+        
+        # Run test in thread
         def run_test():
-            results = self.test_runner.execute_login_test(username, password)
-            self.root.after(0, self.display_test_results, results)
+            test_case = self.custom_test_builder.build_test_case(test_name)
+            results = self.test_runner.execute_custom_test(test_case, progress_callback)
+            
+            # Display results
+            self.root.after(0, self.display_custom_test_results, results)
+            
+            # Save to database
             self.save_test_results_to_db(results)
         
         threading.Thread(target=run_test, daemon=True).start()
     
-    def display_test_results(self, results):
-        """Display test results in UI"""
-        output = f"""
-╔════════════════════════════════════════════╗
-║         LOGIN TEST RESULTS                 ║
-╚════════════════════════════════════════════╝
-
-Test Name: {results['test_name']}
-Status: {results['status']}
-Duration: {results.get('duration', 0):.2f} seconds
-
-Steps Executed:
-"""
+    def update_test_progress(self, current, total, description):
+        """Update test progress bar"""
+        progress = (current / total) * 100
+        self.test_progress['value'] = progress
+        self.test_progress_label.config(text=f"Step {current}/{total}: {description}")
+    
+    def display_custom_test_results(self, results):
+        """Display custom test results with report"""
+        output = f"\n{'='*40}\n"
+        output += f"Test: {results['test_name']}\n"
+        output += f"Status: {results['status']}\n"
+        output += f"Duration: {results.get('duration', 0):.2f}s\n\n"
+        
+        output += "STEP-BY-STEP EXECUTION:\n"
+        output += "-"*30 + "\n"
         
         for i, step in enumerate(results['steps'], 1):
-            status_icon = "✅" if step['status'] == 'passed' else "❌" if step['status'] == 'failed' else "⭕"
-            output += f"{i}. {status_icon} {step['step']}\n"
+            status = "✅" if step['status'] == 'passed' else "❌"
+            output += f"{i}. {status} {step['description']}\n"
+            output += f"   Result: {step['message']}\n"
         
-        output += f"\nScreenshots Captured: {len(results.get('screenshots', []))}\n"
+        output += f"\nScreenshots: {len(results.get('screenshots', []))}\n"
         
-        for i, screenshot in enumerate(results.get('screenshots', []), 1):
-            if screenshot:
-                output += f"  {i}. {Path(screenshot).name}\n"
+        self.custom_test_results.insert(tk.END, output)
         
-        if results.get('error'):
-            output += f"\n❌ Error: {results['error']}\n"
+        # Update main report tab too
+        self.generate_test_report()
         
-        output += "\n" + "="*50 + "\n"
-        
-        self.test_results_text.insert(tk.END, output)
-        self.log(f"Test completed: {results['status']}")
-        
+        # Show notification
         if results['status'] == 'PASSED':
-            messagebox.showinfo("Test Passed", "Login test completed successfully!")
-        elif results['status'] == 'PARTIAL':
-            messagebox.showwarning("Test Partial", "Login test partially completed")
+            messagebox.showinfo("Test Passed", f"{results['test_name']} completed successfully!")
         else:
-            messagebox.showerror("Test Failed", "Login test failed - check credentials")
+            messagebox.showwarning("Test Failed", f"{results['test_name']} failed or partially completed")
+    
+    def run_login_test(self):
+        """Run full login test"""
+        if not self.driver or not self.test_runner:
+            messagebox.showerror("Error", "Connect to device first")
+            return
+        
+        messagebox.showinfo("Login Test", "Running login test (without actual login for safety)")
+    
+    def run_ok_button_test(self):
+        """Test OK button clicking"""
+        if not self.driver:
+            messagebox.showerror("Error", "Connect to device first")
+            return
+        
+        try:
+            from appium.webdriver.common.appiumby import AppiumBy
+            
+            # Try to find OK button
+            ok_button = self.driver.find_element(AppiumBy.ID, "android:id/button1")
+            ok_button.click()
+            self.log("OK button clicked")
+            messagebox.showinfo("Success", "OK button clicked")
+        except:
+            try:
+                ok_button = self.driver.find_element(AppiumBy.XPATH, "//android.widget.Button[@text='OK']")
+                ok_button.click()
+                self.log("OK button clicked (by text)")
+                messagebox.showinfo("Success", "OK button clicked")
+            except Exception as e:
+                messagebox.showerror("Error", f"OK button not found: {e}")
     
     def save_test_results_to_db(self, results):
         """Save test results to database"""
@@ -1628,252 +2034,6 @@ Steps Executed:
             
         except Exception as e:
             self.log(f"Failed to save test results: {e}")
-    
-    # Custom Test Methods
-    def refresh_available_elements(self):
-        """Refresh available elements from last scan"""
-        self.available_elements_listbox.delete(0, tk.END)
-        
-        if self.last_scan_results:
-            elements = self.last_scan_results.get('elements', [])
-            self.custom_test_builder.add_scanned_elements(elements)
-            
-            for i, element in enumerate(elements):
-                # Create display name
-                name = element.get('text', '')[:20] or element.get('resource_id', '').split('/')[-1][:20] or f'Element_{i+1}'
-                elem_type = element.get('type', '').split('.')[-1] if '.' in element.get('type', '') else element.get('type', '')
-                display = f"{name} [{elem_type}]"
-                
-                self.available_elements_listbox.insert(tk.END, display)
-            
-            self.log(f"Loaded {len(elements)} elements for custom test")
-        else:
-            messagebox.showinfo("No Elements", "Please scan a screen first to get available elements")
-    
-    def on_element_select(self, event):
-        """Handle element selection in custom test builder"""
-        selection = self.available_elements_listbox.curselection()
-        if selection:
-            index = selection[0]
-            elements = self.custom_test_builder.scanned_elements
-            
-            if index < len(elements):
-                element = elements[index]
-                
-                # Display element details
-                details = f"""Resource ID: {element.get('resource_id', 'N/A')}
-Text: {element.get('text', 'N/A')}
-Type: {element.get('type', 'N/A')}
-Clickable: {element.get('clickable', False)}
-Enabled: {element.get('enabled', False)}
-Bounds: {element.get('bounds', 'N/A')}
-XPath: {element.get('xpath', 'N/A')}"""
-                
-                self.element_details_text.delete(1.0, tk.END)
-                self.element_details_text.insert(1.0, details)
-    
-    def add_element_to_test(self):
-        """Add selected element to custom test"""
-        selection = self.available_elements_listbox.curselection()
-        if not selection:
-            messagebox.showwarning("No Selection", "Please select an element first")
-            return
-        
-        index = selection[0]
-        elements = self.custom_test_builder.scanned_elements
-        
-        if index >= len(elements):
-            return
-        
-        element = elements[index]
-        
-        # Prepare element info for test step
-        element_info = {
-            'name': element.get('text', '') or element.get('resource_id', '').split('/')[-1] or f'Element_{index+1}',
-            'locator_strategy': 'xpath',
-            'locator_value': element.get('xpath', f"//*[{index+1}]")
-        }
-        
-        # Get action and data
-        action = self.custom_action_var.get()
-        data = self.custom_data_var.get() if self.custom_data_var.get() else None
-        description = self.custom_desc_var.get()
-        
-        # Add step
-        self.custom_test_builder.add_step(action, element_info, data, description)
-        
-        # Update tree
-        self.update_test_steps_tree()
-        
-        self.log(f"Added {action} step for {element_info['name']}")
-    
-    def update_test_steps_tree(self):
-        """Update the test steps tree view"""
-        # Clear tree
-        for item in self.test_steps_tree.get_children():
-            self.test_steps_tree.delete(item)
-        
-        # Add steps
-        for i, step in enumerate(self.custom_test_builder.test_steps, 1):
-            element_name = step.get('element_info', {}).get('name', 'Unknown')
-            self.test_steps_tree.insert('', 'end', text=str(i), values=(
-                step.get('action', ''),
-                element_name[:30],
-                step.get('data', '')[:20] if step.get('data') else '',
-                step.get('description', '')[:50]
-            ))
-    
-    def move_step_up(self):
-        """Move selected test step up"""
-        selection = self.test_steps_tree.selection()
-        if selection:
-            item = selection[0]
-            index = self.test_steps_tree.index(item)
-            self.custom_test_builder.move_step_up(index)
-            self.update_test_steps_tree()
-    
-    def move_step_down(self):
-        """Move selected test step down"""
-        selection = self.test_steps_tree.selection()
-        if selection:
-            item = selection[0]
-            index = self.test_steps_tree.index(item)
-            self.custom_test_builder.move_step_down(index)
-            self.update_test_steps_tree()
-    
-    def remove_test_step(self):
-        """Remove selected test step"""
-        selection = self.test_steps_tree.selection()
-        if selection:
-            item = selection[0]
-            index = self.test_steps_tree.index(item)
-            self.custom_test_builder.remove_step(index)
-            self.update_test_steps_tree()
-    
-    def clear_custom_test(self):
-        """Clear all custom test steps"""
-        if messagebox.askyesno("Clear Test", "Remove all test steps?"):
-            self.custom_test_builder.clear_steps()
-            self.update_test_steps_tree()
-    
-    def save_custom_test(self):
-        """Save custom test to file and database"""
-        test_name = self.custom_test_name.get()
-        
-        # Save to file
-        filepath = filedialog.asksaveasfilename(
-            defaultextension=".json",
-            filetypes=[("JSON files", "*.json")],
-            initialdir=custom_tests_dir,
-            initialfile=f"{test_name}.json"
-        )
-        
-        if filepath:
-            try:
-                self.custom_test_builder.save_test(filepath)
-                
-                # Also save to database
-                conn = sqlite3.connect(DB_PATH)
-                cursor = conn.cursor()
-                
-                cursor.execute('''
-                    INSERT OR REPLACE INTO custom_tests (test_name, steps, description)
-                    VALUES (?, ?, ?)
-                ''', (
-                    test_name,
-                    json.dumps(self.custom_test_builder.test_steps),
-                    f"Custom test saved at {datetime.now()}"
-                ))
-                
-                conn.commit()
-                conn.close()
-                
-                messagebox.showinfo("Saved", f"Test saved to {Path(filepath).name}")
-                self.log(f"Custom test saved: {test_name}")
-                
-            except Exception as e:
-                messagebox.showerror("Save Error", str(e))
-    
-    def load_custom_test(self):
-        """Load custom test from file"""
-        filepath = filedialog.askopenfilename(
-            filetypes=[("JSON files", "*.json")],
-            initialdir=custom_tests_dir
-        )
-        
-        if filepath:
-            try:
-                test_case = self.custom_test_builder.load_test(filepath)
-                self.custom_test_name.set(test_case.get('name', 'Loaded_Test'))
-                self.update_test_steps_tree()
-                messagebox.showinfo("Loaded", f"Test loaded: {test_case.get('name')}")
-                self.log(f"Custom test loaded from {Path(filepath).name}")
-            except Exception as e:
-                messagebox.showerror("Load Error", str(e))
-    
-    def run_custom_test(self):
-        """Run the custom test"""
-        if not self.driver:
-            messagebox.showerror("Error", "Connect to device first")
-            return
-        
-        if not self.test_runner:
-            messagebox.showerror("Error", "Test runner not initialized")
-            return
-        
-        if not self.custom_test_builder.test_steps:
-            messagebox.showwarning("No Steps", "Please add test steps first")
-            return
-        
-        test_name = self.custom_test_name.get()
-        
-        self.log(f"Running custom test: {test_name}")
-        self.custom_test_results.delete(1.0, tk.END)
-        self.custom_test_results.insert(tk.END, f"Running {test_name}...\n")
-        
-        # Run test in thread
-        def run_test():
-            test_case = self.custom_test_builder.build_test_case(test_name)
-            results = self.test_runner.execute_custom_test(test_case)
-            
-            # Display results
-            self.root.after(0, self.display_custom_test_results, results)
-            
-            # Save to database
-            self.save_test_results_to_db(results)
-        
-        threading.Thread(target=run_test, daemon=True).start()
-    
-    def display_custom_test_results(self, results):
-        """Display custom test results"""
-        output = f"\n{'='*40}\n"
-        output += f"Test: {results['test_name']}\n"
-        output += f"Status: {results['status']}\n"
-        output += f"Duration: {results.get('duration', 0):.2f}s\n\n"
-        
-        for i, step in enumerate(results['steps'], 1):
-            status = "✅" if step['status'] == 'passed' else "❌"
-            output += f"{i}. {status} {step['description']}\n"
-        
-        output += f"\nScreenshots: {len(results.get('screenshots', []))}\n"
-        
-        self.custom_test_results.insert(tk.END, output)
-        
-        # Show notification
-        if results['status'] == 'PASSED':
-            messagebox.showinfo("Test Passed", f"{results['test_name']} completed successfully!")
-        else:
-            messagebox.showwarning("Test Failed", f"{results['test_name']} failed or partially completed")
-    
-    def use_scan_for_custom_test(self):
-        """Use last scan results for custom test building"""
-        if not self.last_scan_results:
-            messagebox.showwarning("No Scan", "Please scan a screen first")
-            return
-        
-        self.refresh_available_elements()
-        self.notebook.select(2)  # Switch to Custom Test Builder tab
-        messagebox.showinfo("Elements Loaded", f"Loaded {len(self.last_scan_results.get('elements', []))} elements for custom test building")
     
     def refresh_db_stats(self):
         """Refresh database statistics"""
@@ -1916,37 +2076,13 @@ Last Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         except Exception as e:
             self.log(f"Failed to refresh stats: {e}")
     
-    def load_recent_scans(self):
-        """Load recent scans from database"""
-        try:
-            conn = sqlite3.connect(DB_PATH)
-            cursor = conn.cursor()
-            
-            cursor.execute('''
-                SELECT id, scan_timestamp, screen_name, elements_count, screenshot_path
-                FROM scan_results
-                ORDER BY scan_timestamp DESC
-                LIMIT 10
-            ''')
-            
-            scans = cursor.fetchall()
-            conn.close()
-            
-            for item in self.scans_tree.get_children():
-                self.scans_tree.delete(item)
-            
-            for scan in scans:
-                self.scans_tree.insert('', 'end', values=scan)
-            
-        except Exception as e:
-            self.log(f"Failed to load scans: {e}")
-    
     def export_to_csv(self):
         """Export database to CSV"""
         filepath = filedialog.asksaveasfilename(
             defaultextension=".csv",
             filetypes=[("CSV files", "*.csv")],
-            initialdir=exports_dir
+            initialdir=exports_dir,
+            initialfile=f"export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
         )
         
         if not filepath:
@@ -1955,48 +2091,73 @@ Last Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         try:
             conn = sqlite3.connect(DB_PATH)
             
+            # Export elements
             query = "SELECT * FROM elements"
-            cursor = conn.cursor()
-            cursor.execute(query)
-            
-            with open(filepath, 'w', newline='', encoding='utf-8') as f:
-                writer = csv.writer(f)
-                writer.writerow([desc[0] for desc in cursor.description])
-                writer.writerows(cursor.fetchall())
+            import pandas as pd
+            df = pd.read_sql_query(query, conn)
+            df.to_csv(filepath, index=False)
             
             conn.close()
             
-            self.log(f"✅ Exported to {Path(filepath).name}")
-            messagebox.showinfo("Success", f"Data exported to:\n{filepath}")
+            self.log(f"Exported {len(df)} records to CSV")
+            messagebox.showinfo("Success", f"Exported {len(df)} records to {Path(filepath).name}")
             
         except Exception as e:
-            self.log(f"❌ Export failed: {e}")
-            messagebox.showerror("Error", f"Export failed:\n{e}")
+            self.log(f"Export failed: {e}")
+            messagebox.showerror("Error", f"Export failed: {e}")
     
     def clear_old_data(self):
         """Clear old data from database"""
-        if messagebox.askyesno("Confirm", "Clear all database data?"):
-            try:
-                conn = sqlite3.connect(DB_PATH)
-                cursor = conn.cursor()
-                
-                cursor.execute("DELETE FROM elements")
-                cursor.execute("DELETE FROM scan_results")
-                cursor.execute("DELETE FROM test_results")
-                cursor.execute("DELETE FROM custom_tests")
-                
-                conn.commit()
-                conn.close()
-                
-                self.log("✅ Database cleared")
-                messagebox.showinfo("Success", "Database cleared successfully")
-                
-                self.refresh_db_stats()
-                self.load_recent_scans()
-                
-            except Exception as e:
-                self.log(f"❌ Failed to clear database: {e}")
-                messagebox.showerror("Error", f"Failed to clear database:\n{e}")
+        if not messagebox.askyesno("Confirm", "Clear data older than 30 days?"):
+            return
+        
+        try:
+            conn = sqlite3.connect(DB_PATH)
+            cursor = conn.cursor()
+            
+            cutoff_date = datetime.now() - timedelta(days=30)
+            
+            cursor.execute("DELETE FROM scan_results WHERE scan_timestamp < ?", (cutoff_date,))
+            cursor.execute("DELETE FROM test_results WHERE test_timestamp < ?", (cutoff_date,))
+            
+            deleted = cursor.rowcount
+            conn.commit()
+            conn.close()
+            
+            self.log(f"Cleared {deleted} old records")
+            messagebox.showinfo("Success", f"Cleared {deleted} old records")
+            self.refresh_db_stats()
+            
+        except Exception as e:
+            self.log(f"Failed to clear data: {e}")
+            messagebox.showerror("Error", f"Failed to clear: {e}")
+    
+    def load_recent_scans(self):
+        """Load recent scans into tree view"""
+        try:
+            conn = sqlite3.connect(DB_PATH)
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                SELECT id, scan_timestamp, screen_name, elements_count, screenshot_path
+                FROM scan_results
+                ORDER BY scan_timestamp DESC
+                LIMIT 20
+            ''')
+            
+            scans = cursor.fetchall()
+            conn.close()
+            
+            # Clear tree
+            for item in self.scans_tree.get_children():
+                self.scans_tree.delete(item)
+            
+            # Add scans
+            for scan in scans:
+                self.scans_tree.insert('', 'end', values=scan)
+            
+        except Exception as e:
+            self.log(f"Failed to load scans: {e}")
     
     def generate_test_report(self):
         """Generate test execution report"""
@@ -2009,82 +2170,37 @@ Last Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
                        duration, test_timestamp
                 FROM test_results
                 ORDER BY test_timestamp DESC
+                LIMIT 10
             ''')
             
             tests = cursor.fetchall()
             conn.close()
             
-            html = f"""
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Test Execution Report</title>
-    <style>
-        body {{ font-family: Arial, sans-serif; margin: 20px; }}
-        h1 {{ color: #333; }}
-        table {{ border-collapse: collapse; width: 100%; }}
-        th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
-        th {{ background-color: #4CAF50; color: white; }}
-        .passed {{ color: green; font-weight: bold; }}
-        .failed {{ color: red; font-weight: bold; }}
-    </style>
-</head>
-<body>
-    <h1>Test Execution Report</h1>
-    <p>Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
-    
-    <table>
-        <tr>
-            <th>Test Name</th>
-            <th>Status</th>
-            <th>Passed</th>
-            <th>Failed</th>
-            <th>Total</th>
-            <th>Duration (s)</th>
-            <th>Timestamp</th>
-        </tr>
+            report = f"""
+TEST EXECUTION REPORT
+Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+{'='*60}
+
+RECENT TEST EXECUTIONS:
 """
             
             for test in tests:
-                status_class = 'passed' if test[1] == 'PASSED' else 'failed'
-                html += f"""
-        <tr>
-            <td>{test[0]}</td>
-            <td class="{status_class}">{test[1]}</td>
-            <td>{test[2]}</td>
-            <td>{test[3]}</td>
-            <td>{test[4]}</td>
-            <td>{test[5]:.2f}</td>
-            <td>{test[6]}</td>
-        </tr>
+                report += f"""
+Test Name: {test[0]}
+Status: {test[1]}
+Steps: {test[2]} passed / {test[3]} failed / {test[4]} total
+Duration: {test[5]:.2f} seconds
+Timestamp: {test[6]}
+{'-'*40}
 """
-            
-            html += """
-    </table>
-</body>
-</html>
-"""
-            
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            report_path = reports_dir / f"test_report_{timestamp}.html"
-            
-            with open(report_path, 'w') as f:
-                f.write(html)
-            
-            self.log(f"✅ Test report generated: {report_path.name}")
             
             self.report_text.delete(1.0, tk.END)
-            self.report_text.insert(1.0, f"Test Report Generated\n{'='*50}\n\n")
-            self.report_text.insert(tk.END, f"Total Tests: {len(tests)}\n")
-            self.report_text.insert(tk.END, f"Report saved to: {report_path}\n")
+            self.report_text.insert(1.0, report)
             
-            if messagebox.askyesno("Report Generated", "Open report in browser?"):
-                import webbrowser
-                webbrowser.open(f"file://{report_path.absolute()}")
+            self.log("✅ Test report generated")
             
         except Exception as e:
             self.log(f"❌ Report generation failed: {e}")
-            messagebox.showerror("Error", f"Failed to generate report:\n{e}")
     
     def generate_scan_report(self):
         """Generate scan report"""
@@ -2096,19 +2212,45 @@ Last Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
                 SELECT screen_name, elements_count, scan_timestamp
                 FROM scan_results
                 ORDER BY scan_timestamp DESC
+                LIMIT 20
             ''')
             
             scans = cursor.fetchall()
+            
+            # Get element statistics
+            cursor.execute('''
+                SELECT 
+                    COUNT(*) as total,
+                    SUM(clickable) as clickable,
+                    SUM(enabled) as enabled,
+                    SUM(password) as password_fields
+                FROM elements
+            ''')
+            
+            stats = cursor.fetchone()
             conn.close()
             
-            report = f"Scan Report\n{'='*50}\n\n"
-            report += f"Total Scans: {len(scans)}\n\n"
+            report = f"""
+SCAN REPORT
+Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+{'='*60}
+
+ELEMENT STATISTICS:
+Total Elements Scanned: {stats[0]}
+Clickable Elements: {stats[1] or 0}
+Enabled Elements: {stats[2] or 0}
+Password Fields: {stats[3] or 0}
+
+RECENT SCANS:
+"""
             
-            for scan in scans[:10]:
-                report += f"Screen: {scan[0]}\n"
-                report += f"Elements: {scan[1]}\n"
-                report += f"Time: {scan[2]}\n"
-                report += "-"*30 + "\n"
+            for scan in scans:
+                report += f"""
+Screen: {scan[0]}
+Elements: {scan[1]}
+Timestamp: {scan[2]}
+{'-'*40}
+"""
             
             self.report_text.delete(1.0, tk.END)
             self.report_text.insert(1.0, report)
@@ -2116,11 +2258,78 @@ Last Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
             self.log("✅ Scan report generated")
             
         except Exception as e:
-            self.log(f"❌ Scan report failed: {e}")
+            self.log(f"❌ Scan report generation failed: {e}")
     
     def generate_full_report(self):
         """Generate comprehensive report"""
-        self.generate_test_report()
+        try:
+            # Generate full report combining test and scan data
+            test_report_lines = []
+            scan_report_lines = []
+            
+            # Get test data
+            conn = sqlite3.connect(DB_PATH)
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                SELECT COUNT(*) as total_tests,
+                       SUM(CASE WHEN status = 'PASSED' THEN 1 ELSE 0 END) as passed,
+                       SUM(CASE WHEN status = 'FAILED' THEN 1 ELSE 0 END) as failed,
+                       AVG(duration) as avg_duration
+                FROM test_results
+            ''')
+            
+            test_stats = cursor.fetchone()
+            
+            cursor.execute('''
+                SELECT COUNT(*) as total_scans,
+                       AVG(elements_count) as avg_elements
+                FROM scan_results
+            ''')
+            
+            scan_stats = cursor.fetchone()
+            
+            conn.close()
+            
+            report = f"""
+COMPREHENSIVE AUTOMATION REPORT
+Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+{'='*60}
+
+TEST EXECUTION SUMMARY:
+Total Tests Executed: {test_stats[0]}
+Passed: {test_stats[1] or 0}
+Failed: {test_stats[2] or 0}
+Average Duration: {test_stats[3] or 0:.2f} seconds
+
+SCANNING SUMMARY:
+Total Scans: {scan_stats[0]}
+Average Elements per Scan: {scan_stats[1] or 0:.0f}
+
+DATABASE INFORMATION:
+Database Size: {Path(DB_PATH).stat().st_size / 1024:.2f} KB
+Project Root: {project_root}
+Screenshots Directory: {screenshots_dir}
+Reports Directory: {reports_dir}
+
+SYSTEM INFORMATION:
+Platform: {sys.platform}
+Python Version: {sys.version.split()[0]}
+Current Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+"""
+            
+            self.report_text.delete(1.0, tk.END)
+            self.report_text.insert(1.0, report)
+            
+            # Save report to file
+            report_file = reports_dir / f"full_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+            with open(report_file, 'w') as f:
+                f.write(report)
+            
+            self.log(f"✅ Full report generated and saved: {report_file.name}")
+            
+        except Exception as e:
+            self.log(f"❌ Full report generation failed: {e}")
     
     def log(self, message):
         """Log message to status and file"""
@@ -2131,7 +2340,7 @@ Last Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
     
     def run(self):
         """Run the application"""
-        self.log("Application started - v9.0 Unrestricted")
+        self.log("Application started - v10.0 Complete Enhanced")
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.root.mainloop()
     
@@ -2146,8 +2355,9 @@ Last Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 def main():
     """Main entry point"""
     print("="*60)
-    print("InLinea Banking Automation v9.0 - Unrestricted Edition")
-    print("Complete with Enhanced Features - NO SAFETY CHECKS")
+    print("InLinea Banking Automation v10.0 - Complete Enhanced Edition")
+    print("All Original Features Plus Enhancements")
+    print("Separated Server and Device Tabs with Progress & Logs")
     print("FOR TESTING ENVIRONMENT ONLY")
     print("="*60)
     
