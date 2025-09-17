@@ -1,0 +1,21 @@
+custom_test/
+database/
+dist/
+exports/
+.logs
+logs/
+reports/
+screenshots/
+testFile.py
+src/BankingAutomation_Package_FINALL.zip
+src/BankingAutomation_Package
+src/build/
+src/dist/
+# Ignore the specific directories inside src/
+src/database/
+src/logs/
+src/reports/
+src/screenshots/
+
+# Ignore any zip files in src/
+src/BankingAutomation_Package_FINALL.zip

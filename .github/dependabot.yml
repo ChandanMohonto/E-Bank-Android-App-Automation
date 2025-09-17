@@ -1,0 +1,11 @@
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "daily"  # You can set this to "daily", "weekly", or "monthly"
+    allow:
+      - dependency-type: "direct"  # To only update direct dependencies
+    ignore:
+      - dependency-name: "pandas"
+        versions: ["<=1.5.0"]  # Optional: If you want to ignore specific versions
